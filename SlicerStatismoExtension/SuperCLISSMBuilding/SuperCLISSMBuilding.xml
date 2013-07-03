@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<executable>
+  <category>Examples</category>
+  <title>SuperCLISSMBuilding</title>
+  <description><![CDATA[This is a CLI module for building a statistical atlas]]></description>
+  <contributor>Marine Clogenson (EPFL)</contributor>
+  <parameters>
+    <label>Model Building</label>
+    <description><![CDATA[Input/output parameters]]></description>
+    <geometry type="model">
+      <name>referenceModel</name>
+      <label>Reference Model</label>
+      <channel>input</channel>
+      <index>0</index>
+      <description><![CDATA[Reference Model for the atlas creator (same than the one used for alignment) ]]></description>    
+    </geometry>
+    <directory>
+      <name>inputModelDirectory</name>
+      <label>inputModelDirectory</label>
+      <channel>input</channel>
+      <index>1</index>
+      <description><![CDATA[Input Model Directory]]></description>
+    </directory>
+    <string>
+      <name>outputModelName</name>
+      <label>Output Model Name</label>
+      <channel>output</channel>
+      <index>2</index>
+      <description><![CDATA[Output Model Name]]></description>
+    </string> 
+    <geometry type="model">
+      <name>meanModel</name>
+      <label>Mean Model</label>
+      <channel>output</channel>
+      <index>3</index>
+      <description><![CDATA[Model]]></description>
+    </geometry>
+  </parameters>
+  <parameters>
+    <label>Display sample</label>
+    <description><![CDATA[Parameters used for display sample]]></description>
+    <boolean>
+      <name>skipModelBuilding</name>
+      <longflag>skipModelBuilding</longflag>
+      <description><![CDATA[Skip Model Building]]></description>
+      <label>Skip Model Building</label>
+      <default>false</default>
+    </boolean>
+    <integer>
+      <name>PC</name>
+      <description><![CDATA[Principal component]]></description>
+      <label>Principal component</label>
+      <default>0</default>
+      <constraints>
+        <minimum>0</minimum>
+        <maximum>10</maximum>
+        <step>1</step>
+      </constraints>
+      <index>4</index>
+    </integer>
+    <integer>
+      <name>standardVariation</name>
+      <longflag>standardVariation</longflag>
+      <description><![CDATA[Standard Variation]]></description>
+      <label>Standard Variation</label>
+      <default>0</default>
+      <constraints>
+        <minimum>-10</minimum>
+        <maximum>10</maximum>
+        <step>1</step>
+      </constraints>
+    </integer>
+    <geometry type="model">
+      <name>modelSamplePC</name>
+      <label>Model Sample PC</label>
+      <channel>output</channel>
+      <index>5</index>
+      <description><![CDATA[Model Sample PC]]></description>
+    </geometry>
+  </parameters>
+</executable>
+
