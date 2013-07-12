@@ -14,6 +14,12 @@
 #include "statismo/StatisticalModel.h"
 #include "Representers/VTK/vtkPolyDataRepresenter.h"
 #include <vtkPolyData.h>
+
+// MRML includes
+#include "vtkMRMLScene.h"
+#include "vtkMRMLModelNode.h"
+#include "vtkMRMLModelDisplayNode.h"
+
 //-----------------------------------------------------------------------------
 /// \ingroup Slicer_QtModules_LoadableSSMBuilding
 class qSlicerLoadableSSMBuildingSelectParametersWidgetPrivate
@@ -102,16 +108,20 @@ void qSlicerLoadableSSMBuildingSelectParametersWidget::onSelect()
   std::string modelString = modelQString.toStdString(); 
   // Load the model
   auto_ptr<StatisticalModelType> model(StatisticalModelType::Load(modelString.c_str()));
-	VectorType coefficients = VectorType::Zero(model->GetNumberOfPrincipalComponents());
+  VectorType coefficients = VectorType::Zero(model->GetNumberOfPrincipalComponents());
   int pc = static_cast<int>(d->pcSlider->value());
-	coefficients(pc) = static_cast<int>(d->stdSlider->value());
-	vtkPolyData* samplePC = model->DrawSample(coefficients);
+  coefficients(pc) = static_cast<int>(d->stdSlider->value());
+  vtkPolyData* samplePC = model->DrawSample(coefficients);
   
   // Add polydata sample to the scene
   vtkMRMLScene* mrmlScene = vtkMRMLScene::New();
   vtkMRMLModelNode* sampleNode = vtkMRMLModelNode::New();
-  sampleNode->SetPolyData(samplePC);
-  mrmlScene->AddNode(sampleNode.GetPointer());
+  sampleNode->SetAndObservePolyData(samplePC);
+  mrmlScene->AddNode(sampleNode);
+  
+  vtkMRMLModelDisplayNode* modelDisplayNode = vtkMRMLModelDisplayNode::New();
+  mrmlScene->AddNode(modelDisplayNode);
+  sampleNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
 
 }
 
