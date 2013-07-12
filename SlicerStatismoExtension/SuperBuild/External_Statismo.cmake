@@ -12,7 +12,8 @@ if(DEFINED Statismo_DIR AND NOT EXISTS ${Statismo_DIR})
 endif()
 
 # Set dependency list
-set(Statismo_DEPENDENCIES Swig)
+#set(Statismo_DEPENDENCIES Swig)
+set(Statismo_DEPENDENCIES "")
 
 # Include dependent projects if any
 SlicerMacroCheckExternalProjectDependency(Statismo)

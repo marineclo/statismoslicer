@@ -71,7 +71,7 @@ ExternalProject_Add(${proj}
     # Statismo
     -DStatismo_DIR:PATH=${Statismo_DIR}
 
-    -DSlicer_PREREQUISITES_CONFIGURED:BOOL=${Slicer_PREREQUISITES_CONFIGURED}
+    #-DSlicer_PREREQUISITES_CONFIGURED:BOOL=${Slicer_PREREQUISITES_CONFIGURED}
     
     ${ep_cmake_args}
   DEPENDS

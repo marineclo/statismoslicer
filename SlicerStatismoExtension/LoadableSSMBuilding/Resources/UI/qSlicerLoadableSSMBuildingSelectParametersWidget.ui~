@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>qSlicerLoadableSSMBuildingSelectParametersWidget</class>
+ <widget class="QWidget" name="qSlicerLoadableSSMBuildingSelectParametersWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>498</width>
+    <height>259</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Select Parameters</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <property name="margin">
+    <number>0</number>
+   </property>
+   <item row="0" column="0">
+    <widget class="QLabel" name="inputModel">
+     <property name="text">
+      <string>Input Model</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QPushButton" name="inputModelButton">
+     <property name="text">
+      <string>Open Model</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="inputModel">
+     <property name="text">
+      <string>Input Model</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QPushButton" name="inputModelButton">
+     <property name="text">
+      <string>Open Model</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="PC">
+     <property name="text">
+      <string>Principal Component</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="ctkSliderWidget" name="pcSlider">
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="minimum">
+      <double>0.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="std">
+     <property name="text">
+      <string>Standard deviation</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="ctkSliderWidget" name="stdSlider">
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="minimum">
+      <double>-10.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ctkSliderWidget</class>
+   <extends>QWidget</extends>
+   <header>ctkSliderWidget.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>inputModelButton</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>qSlicerLoadableSSMBuildingSelectParametersWidget</receiver>
+   <slot>onSelectInputModel()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>195</x>
+     <y>40</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>122</x>
+     <y>28</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>stdSlider</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>qSlicerLoadableSSMBuildingSelectParametersWidget</receiver>
+   <slot>onSelect()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>329</x>
+     <y>207</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>157</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pcSlider</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>qSlicerLoadableSSMBuildingSelectParametersWidget</receiver>
+   <slot>onSelect()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>340</x>
+     <y>129</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>366</x>
+     <y>149</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>onSelect()</slot>
+  <slot>onSelectInputModel()</slot>
+ </slots>
+</ui>
