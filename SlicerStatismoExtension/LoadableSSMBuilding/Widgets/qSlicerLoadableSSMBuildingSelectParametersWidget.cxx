@@ -14,6 +14,7 @@
 #include "statismo/StatisticalModel.h"
 #include "Representers/VTK/vtkPolyDataRepresenter.h"
 #include <vtkPolyData.h>
+#include <vtkPolyDataWriter.h>
 
 // MRML includes
 #include "vtkMRMLScene.h"
@@ -116,12 +117,36 @@ void qSlicerLoadableSSMBuildingSelectParametersWidget::onSelect()
   // Add polydata sample to the scene
   vtkMRMLScene* mrmlScene = vtkMRMLScene::New();
   vtkMRMLModelNode* sampleNode = vtkMRMLModelNode::New();
+  sampleNode->SetScene(mrmlScene);
   sampleNode->SetAndObservePolyData(samplePC);
-  mrmlScene->AddNode(sampleNode);
+  //mrmlScene->AddNode(sampleNode);
   
   vtkMRMLModelDisplayNode* modelDisplayNode = vtkMRMLModelDisplayNode::New();
+  modelDisplayNode->SetScene(mrmlScene);
   mrmlScene->AddNode(modelDisplayNode);
   sampleNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
+  modelDisplayNode->SetInputPolyData(sampleNode->GetPolyData());
+  mrmlScene->AddNode(sampleNode);
+
+  // Save polydata
+
+  /*vtkSlicerModelsLogic* modelsLogic = vtkSlicerModelsLogic::SafeDownCast(modelsModule->logic());
+  vtkMRMLModelNode* modelNode = modelsLogic->AddModel(samplePC)
+  vtkPolyDataWriter *pdWriter = vtkPolyDataWriter::New();
+  pdWriter->SetFileName("~/Desktop/m.vtk");
+  pdWriter->SetInput(samplePC);
+  pdWriter->Write();
+
+    //pdWriter->Delete();
+  
+
+    vtkXMLPolyDataWriter *pdWriter = vtkXMLPolyDataWriter::New();
+    pdWriter->SetIdTypeToInt32();
+    pdWriter->SetFileName(modelDisplayName.c_str());
+    pdWriter->SetInput(modelToDisplay);
+    pdWriter->Write();
+    pdWriter->Delete();
+  }*/
 
 }
 
