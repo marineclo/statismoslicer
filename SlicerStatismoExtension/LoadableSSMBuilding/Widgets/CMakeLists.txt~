@@ -1,3 +1,11 @@
+
+#-----------------------------------------------------------------------------
+# Third party libraries
+find_package(Statismo REQUIRED)
+
+link_directories(${STATISMO_LIBRARY_DIR})
+
+#-----------------------------------------------------------------------------
 project(qSlicer${MODULE_NAME}ModuleWidgets)
 
 set(KIT ${PROJECT_NAME})
@@ -5,6 +13,7 @@ set(KIT ${PROJECT_NAME})
 set(${KIT}_EXPORT_DIRECTIVE "Q_SLICER_MODULE_${MODULE_NAME_UPPER}_WIDGETS_EXPORT")
 
 set(${KIT}_INCLUDE_DIRECTORIES
+  ${STATISMO_INCLUDE_DIRS}
   )
 
 set(${KIT}_SRCS
@@ -31,6 +40,9 @@ set(${KIT}_RESOURCES
 
 set(${KIT}_TARGET_LIBRARIES
   vtkSlicer${MODULE_NAME}ModuleLogic
+  ${ITK_LIBRARIES}
+  ${STATISMO_LIBRARIES}
+  ${VTK_LIBRARIES} ${VTK_HDF5_LIBRARIES}
   )
 
 #-----------------------------------------------------------------------------

@@ -9,6 +9,10 @@
 #include "qSlicerLoadableSSMBuildingModule.h"
 #include "qSlicerLoadableSSMBuildingModuleWidget.h"
 
+// Slicer includes
+#include <qSlicerCoreApplication.h>
+#include <qSlicerModuleManager.h>
+
 //-----------------------------------------------------------------------------
 Q_EXPORT_PLUGIN2(qSlicerLoadableSSMBuildingModule, qSlicerLoadableSSMBuildingModule);
 
@@ -82,13 +86,21 @@ QStringList qSlicerLoadableSSMBuildingModule::categories() const
 //-----------------------------------------------------------------------------
 QStringList qSlicerLoadableSSMBuildingModule::dependencies() const
 {
-  return QStringList();
+  return QStringList() << "Models";
 }
 
 //-----------------------------------------------------------------------------
 void qSlicerLoadableSSMBuildingModule::setup()
 {
   this->Superclass::setup();
+  vtkSlicerLoadableSSMBuildingLogic* moduleLogic = vtkSlicerLoadableSSMBuildingLogic::SafeDownCast(this->logic());
+
+  qSlicerAbstractCoreModule* modelsModule = qSlicerCoreApplication::application()->moduleManager()->module("Models");
+  if (modelsModule)
+  {
+    vtkSlicerModelsLogic* modelsLogic = vtkSlicerModelsLogic::SafeDownCast(modelsModule->logic());
+    moduleLogic->SetModelsLogic(modelsLogic);
+  }
 }
 
 //-----------------------------------------------------------------------------

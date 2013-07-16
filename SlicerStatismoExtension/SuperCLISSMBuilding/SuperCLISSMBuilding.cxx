@@ -52,6 +52,7 @@ void displayModel(vtkPolyData* modelToDisplay, std::string modelDisplayName){
     pdWriter->SetFileName(modelDisplayName.c_str() );
     pdWriter->SetInput(modelToDisplay);
     pdWriter->Write();
+    pdWriter->Update();
     pdWriter->Delete();
     }
   else if( extension == std::string(".vtp") )
@@ -61,6 +62,7 @@ void displayModel(vtkPolyData* modelToDisplay, std::string modelDisplayName){
     pdWriter->SetFileName(modelDisplayName.c_str());
     pdWriter->SetInput(modelToDisplay);
     pdWriter->Write();
+    pdWriter->Update();
     pdWriter->Delete();
     }
 }

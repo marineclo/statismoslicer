@@ -26,7 +26,10 @@
 
 // Slicer includes
 #include "vtkSlicerModuleLogic.h"
+#include "vtkSlicerModelsLogic.h"
 
+// VTK includes
+#include "vtkPolyData.h"
 // MRML includes
 
 // STD includes
@@ -44,6 +47,8 @@ public:
   static vtkSlicerLoadableSSMBuildingLogic *New();
   vtkTypeMacro(vtkSlicerLoadableSSMBuildingLogic, vtkSlicerModuleLogic);
   void PrintSelf(ostream& os, vtkIndent indent);
+  void SetModelsLogic(vtkSlicerModelsLogic* modelsLogic);
+  void DisplaySampleModel(vtkPolyData* polydata);
 
 protected:
   vtkSlicerLoadableSSMBuildingLogic();

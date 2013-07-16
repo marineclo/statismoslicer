@@ -14,6 +14,8 @@ set(${KIT}_EXPORT_DIRECTIVE "Q_SLICER_MODULE_${MODULE_NAME_UPPER}_WIDGETS_EXPORT
 
 set(${KIT}_INCLUDE_DIRECTORIES
   ${STATISMO_INCLUDE_DIRS}
+  ${vtkSlicerModelsModuleLogic_SOURCE_DIR}
+  ${vtkSlicerModelsModuleLogic_BINARY_DIR}
   )
 
 set(${KIT}_SRCS
@@ -43,6 +45,7 @@ set(${KIT}_TARGET_LIBRARIES
   ${ITK_LIBRARIES}
   ${STATISMO_LIBRARIES}
   ${VTK_LIBRARIES} ${VTK_HDF5_LIBRARIES}
+  vtkSlicerModelsModuleLogic
   )
 
 #-----------------------------------------------------------------------------
