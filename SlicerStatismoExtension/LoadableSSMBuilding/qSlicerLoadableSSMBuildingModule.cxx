@@ -93,14 +93,14 @@ QStringList qSlicerLoadableSSMBuildingModule::dependencies() const
 void qSlicerLoadableSSMBuildingModule::setup()
 {
   this->Superclass::setup();
-  vtkSlicerLoadableSSMBuildingLogic* moduleLogic = vtkSlicerLoadableSSMBuildingLogic::SafeDownCast(this->logic());
+  /*vtkSlicerLoadableSSMBuildingLogic* moduleLogic = vtkSlicerLoadableSSMBuildingLogic::SafeDownCast(this->logic());
 
   qSlicerAbstractCoreModule* modelsModule = qSlicerCoreApplication::application()->moduleManager()->module("Models");
   if (modelsModule)
   {
     vtkSlicerModelsLogic* modelsLogic = vtkSlicerModelsLogic::SafeDownCast(modelsModule->logic());
     moduleLogic->SetModelsLogic(modelsLogic);
-  }
+  }*/
 }
 
 //-----------------------------------------------------------------------------

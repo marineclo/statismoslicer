@@ -24,6 +24,7 @@
 #include <vtkNew.h>
 #include "vtkMRMLModelNode.h"
 #include "vtkMRMLModelDisplayNode.h"
+
 // STD includes
 #include <cassert>
 
@@ -109,6 +110,7 @@ void vtkSlicerLoadableSSMBuildingLogic::DisplaySampleModel(vtkPolyData* polydata
   
   modelDisplayNode->SetInputPolyData(sampleNode->GetPolyData());
   mrmlScene->AddNode(sampleNode);
+  
   std::cout<<"output1 "<<this->GetMRMLScene()<<std::endl;
 }
 

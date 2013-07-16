@@ -21,9 +21,6 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
-       <widget class="qSlicerLoadableSSMBuildingFooBarWidget" name="FooBar" native="true"/>
-      </item>
-      <item>
        <widget class="qSlicerLoadableSSMBuildingSelectParametersWidget" name="SelectParameters" native="true"/>
       </item>
      </layout>
@@ -55,12 +52,6 @@
    <class>ctkCollapsibleButton</class>
    <extends>QWidget</extends>
    <header>ctkCollapsibleButton.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>qSlicerLoadableSSMBuildingFooBarWidget</class>
-   <extends>QWidget</extends>
-   <header>qSlicerLoadableSSMBuildingFooBarWidget.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>

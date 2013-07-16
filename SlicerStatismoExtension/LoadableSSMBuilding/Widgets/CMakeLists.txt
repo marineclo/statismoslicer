@@ -14,29 +14,22 @@ set(${KIT}_EXPORT_DIRECTIVE "Q_SLICER_MODULE_${MODULE_NAME_UPPER}_WIDGETS_EXPORT
 
 set(${KIT}_INCLUDE_DIRECTORIES
   ${STATISMO_INCLUDE_DIRS}
-  ${vtkSlicerModelsModuleLogic_SOURCE_DIR}
-  ${vtkSlicerModelsModuleLogic_BINARY_DIR}
   )
 
 set(${KIT}_SRCS
-  qSlicer${MODULE_NAME}FooBarWidget.cxx
-  qSlicer${MODULE_NAME}FooBarWidget.h
   qSlicer${MODULE_NAME}SelectParametersWidget.cxx
   qSlicer${MODULE_NAME}SelectParametersWidget.h
   )
 
 set(${KIT}_MOC_SRCS
-  qSlicer${MODULE_NAME}FooBarWidget.h
   qSlicer${MODULE_NAME}SelectParametersWidget.h
   )
 
 set(${KIT}_UI_SRCS
-  ../Resources/UI/qSlicer${MODULE_NAME}FooBarWidget.ui
   ../Resources/UI/qSlicer${MODULE_NAME}SelectParametersWidget.ui
   )
 
 set(${KIT}_RESOURCES
-  ../Resources/UI/qSlicer${MODULE_NAME}FooBarWidget.ui
   ../Resources/UI/qSlicer${MODULE_NAME}SelectParametersWidget.ui
   )
 
@@ -45,7 +38,6 @@ set(${KIT}_TARGET_LIBRARIES
   ${ITK_LIBRARIES}
   ${STATISMO_LIBRARIES}
   ${VTK_LIBRARIES} ${VTK_HDF5_LIBRARIES}
-  vtkSlicerModelsModuleLogic
   )
 
 #-----------------------------------------------------------------------------

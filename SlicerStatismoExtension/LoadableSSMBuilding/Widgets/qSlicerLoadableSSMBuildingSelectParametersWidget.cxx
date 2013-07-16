@@ -7,26 +7,15 @@
 #include <QFileDialog>
 
 // Statismo includes
-/*#include "statismo_ITK/itkStatisticalModel.h"
-#include "itkMesh.h"
-#include "itkMeshRepresenter.h"*/
-
 #include "statismo/StatisticalModel.h"
 #include "Representers/VTK/vtkPolyDataRepresenter.h"
 #include <vtkPolyData.h>
 #include <vtkPolyDataWriter.h>
-#include "vtkSlicerModelsLogic.h"
+
+// LoadableSSMBuilding Logic includes
 #include "vtkSlicerLoadableSSMBuildingLogic.h"
 
-#include <vtkNew.h>
-// MRML includes
-#include "vtkMRMLScene.h"
-#include "vtkMRMLModelNode.h"
-#include "vtkMRMLModelDisplayNode.h"
 
-// Slicer includes
-#include <qSlicerCoreApplication.h>
-#include <qSlicerModuleManager.h>
 //-----------------------------------------------------------------------------
 /// \ingroup Slicer_QtModules_LoadableSSMBuilding
 class qSlicerLoadableSSMBuildingSelectParametersWidgetPrivate
@@ -82,28 +71,6 @@ void qSlicerLoadableSSMBuildingSelectParametersWidget::onSelectInputModel()
 //-----------------------------------------------------------------------------
 void qSlicerLoadableSSMBuildingSelectParametersWidget::onSelect()
 {
-  /*const unsigned Dimensions = 3;
-  typedef itk::Mesh<float, Dimensions  > MeshType;
-  typedef itk::MeshRepresenter<float, Dimensions> RepresenterType;
-  typedef itk::StatisticalModel<RepresenterType> StatisticalModelType;
-  typedef vnl_vector<statismo::ScalarType> VectorType;
-
-  Q_D(qSlicerLoadableSSMBuildingSelectParametersWidget);
-  // Get the model name selected by the user
-  QString modelQString = d->modelNamePath->text();
-  std::string modelString = modelQString.toStdString(); 
-  // Load the model
-  StatisticalModelType::Pointer statModel = StatisticalModelType::New();
-  statModel->Load(modelString.c_str());
-	int nbPCA = statModel->GetNumberOfPrincipalComponents();
-  VectorType coefficients(nbPCA,0.0); // set the vector to 0
-
-  // Compute the sample
-  int nb = static_cast<int>(d->pcSlider->value());
-  coefficients(nb)=d->stdSlider->value();
-  //coefficients(d->pcSlider->value)=d->stdSlider->value;
-  MeshType::Pointer sample = statModel->DrawSample(coefficients);*/
-
   /**** VTK Model ****/
   using std::auto_ptr;
   using namespace statismo;
@@ -114,55 +81,21 @@ void qSlicerLoadableSSMBuildingSelectParametersWidget::onSelect()
   QString modelQString = d->modelNamePath->text();
   std::string modelString = modelQString.toStdString(); 
   // Load the model
-  auto_ptr<StatisticalModelType> model(StatisticalModelType::Load(modelString.c_str()));
-  VectorType coefficients = VectorType::Zero(model->GetNumberOfPrincipalComponents());
+  auto_ptr<StatisticalModelType> statModel(StatisticalModelType::Load(modelString.c_str()));
+  VectorType coefficients = VectorType::Zero(statModel->GetNumberOfPrincipalComponents());
   int pc = static_cast<int>(d->pcSlider->value());
-  coefficients(pc) = static_cast<int>(d->stdSlider->value());
-  vtkPolyData* samplePC = model->DrawSample(coefficients);
+  coefficients(pc) = d->stdSlider->value();
+  vtkPolyData* samplePC = statModel->DrawSample(coefficients);
   
-  std::cout << "modelString: "<<modelString<<std::endl;
   // Add polydata sample to the scene
-  //vtkMRMLScene* mrmlScene = vtkMRMLScene::New();
-/*
-  vtkMRMLModelNode* sampleNode = vtkMRMLModelNode::New();
-  sampleNode->SetScene(mrmlScene);
-  sampleNode->SetName("Sample");
-  sampleNode->SetAndObservePolyData(samplePC);
-  
-  vtkMRMLModelDisplayNode* modelDisplayNode = vtkMRMLModelDisplayNode::New();
-  modelDisplayNode->SetColor(0,1,0); // green
-  modelDisplayNode->SetScene(mrmlScene);
-  mrmlScene->AddNode(modelDisplayNode);
-  sampleNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
-  
-  modelDisplayNode->SetInputPolyData(sampleNode->GetPolyData());
-  mrmlScene->AddNode(sampleNode);*/
-
-  /*vtkNew<vtkMRMLModelDisplayNode> display;
-  mrmlScene->AddNode(display.GetPointer());
-
-  vtkNew<vtkMRMLModelNode> modelDisplay;
-  modelDisplay->SetAndObservePolyData(samplePC);
-  modelDisplay->SetAndObserveDisplayNodeID(display->GetID());
-  mrmlScene->AddNode(modelDisplay.GetPointer());*/
-
-  // Save polydata
   vtkSlicerLoadableSSMBuildingLogic* moduleLogic = vtkSlicerLoadableSSMBuildingLogic::New();
   moduleLogic->DisplaySampleModel(samplePC);
-  //qSlicerAbstractCoreModule* modelsModule = qSlicerCoreApplication::application()->moduleManager()->module("Models");
-  //vtkSlicerModelsLogic* modelsLogic = vtkSlicerModelsLogic::SafeDownCast(modelsModule->logic());
-  /*vtkSlicerModelsLogic* modelsLogic = vtkSlicerModelsLogic::New();
-  vtkMRMLModelNode* modelNode = modelsLogic->AddModel(samplePC);
-  if (modelNode == NULL){
-    std::cout<<"empty"<<std::endl;
-  }*/
+  
+  // Save polydata
   /*vtkPolyDataWriter *pdWriter = vtkPolyDataWriter::New();
   pdWriter->SetFileName("/home/marine/Desktop/m.vtk");
   pdWriter->SetInput(samplePC);
   pdWriter->Write();*/
-
-    //pdWriter->Delete();
-
 
 }
 
