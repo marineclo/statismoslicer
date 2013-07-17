@@ -49,7 +49,7 @@ public:
   void PrintSelf(ostream& os, vtkIndent indent);
   void SetModelsLogic(vtkSlicerModelsLogic* modelsLogic);
   void DisplaySampleModel(vtkPolyData* polydata);
-
+  
 protected:
   vtkSlicerLoadableSSMBuildingLogic();
   virtual ~vtkSlicerLoadableSSMBuildingLogic();

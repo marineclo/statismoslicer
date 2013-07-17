@@ -115,3 +115,10 @@ vtkMRMLAbstractLogic* qSlicerLoadableSSMBuildingModule::createLogic()
 {
   return vtkSlicerLoadableSSMBuildingLogic::New();
 }
+
+void qSlicerLoadableSSMBuildingModule::setMRMLScene(vtkMRMLScene* mrmlScene)
+{
+  this->Superclass::setMRMLScene(mrmlScene);
+}
+
+

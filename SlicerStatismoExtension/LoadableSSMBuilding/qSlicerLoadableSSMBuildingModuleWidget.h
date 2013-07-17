@@ -39,12 +39,14 @@ public:
   virtual ~qSlicerLoadableSSMBuildingModuleWidget();
 
 public slots:
-
+  void onSelect();
+  void onSelectInputModel();
 
 protected:
   QScopedPointer<qSlicerLoadableSSMBuildingModuleWidgetPrivate> d_ptr;
   
   virtual void setup();
+  virtual void setMRMLScene(vtkMRMLScene *scene);
 
 private:
   Q_DECLARE_PRIVATE(qSlicerLoadableSSMBuildingModuleWidget);

@@ -29,6 +29,8 @@
 #include <cassert>
 
 #include "vtkSlicerModelsLogic.h"
+
+#include "qSlicerAbstractCoreModule.h"
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkSlicerLoadableSSMBuildingLogic);
 
@@ -90,27 +92,17 @@ void vtkSlicerLoadableSSMBuildingLogic::SetModelsLogic(vtkSlicerModelsLogic* mod
 //---------------------------------------------------------------------------
 void vtkSlicerLoadableSSMBuildingLogic::DisplaySampleModel(vtkPolyData* polydata)
 {
-  /*vtkSlicerModelsLogic* modelsLogic = vtkSlicerModelsLogic::New();
+  vtkSlicerModelsLogic* modelsLogic = vtkSlicerModelsLogic::New();
   vtkMRMLModelNode* modelNode = modelsLogic->AddModel(polydata);
   if (modelNode == NULL){
     std::cout<<"empty"<<std::endl;
-  }*/
+  }
   std::cout<<"output "<<this->GetMRMLScene()<<std::endl;
-  vtkMRMLScene* mrmlScene = vtkMRMLScene::New();
-  vtkMRMLModelNode* sampleNode = vtkMRMLModelNode::New();
-  sampleNode->SetScene(mrmlScene);
-  sampleNode->SetName("Sample");
-  sampleNode->SetAndObservePolyData(polydata);
-  
-  vtkMRMLModelDisplayNode* modelDisplayNode = vtkMRMLModelDisplayNode::New();
-  modelDisplayNode->SetColor(0,1,0); // green
-  modelDisplayNode->SetScene(mrmlScene);
-  mrmlScene->AddNode(modelDisplayNode);
-  sampleNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
-  
-  modelDisplayNode->SetInputPolyData(sampleNode->GetPolyData());
-  mrmlScene->AddNode(sampleNode);
-  
-  std::cout<<"output1 "<<this->GetMRMLScene()<<std::endl;
 }
+
+/*void vtkSlicerLoadableSSMBuildingLogic::ObserveMRMLScene()
+{
+  vtkMRMLModelNode
+}*/ 
+
 
