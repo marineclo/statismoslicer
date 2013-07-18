@@ -37,6 +37,7 @@ public:
   typedef qSlicerAbstractModuleWidget Superclass;
   qSlicerLoadableSSMBuildingModuleWidget(QWidget *parent=0);
   virtual ~qSlicerLoadableSSMBuildingModuleWidget();
+  void displayEigenSpectrum();
 
 public slots:
   void onSelect();

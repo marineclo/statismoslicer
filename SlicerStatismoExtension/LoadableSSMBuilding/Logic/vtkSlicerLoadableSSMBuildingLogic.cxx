@@ -96,62 +96,17 @@ void vtkSlicerLoadableSSMBuildingLogic::SetModelsLogic(vtkSlicerModelsLogic* mod
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerLoadableSSMBuildingLogic::DisplaySampleModel(vtkPolyData* polydata, vtkMRMLScene * mrmlScene, StatisticalModelType* statModel)
+void vtkSlicerLoadableSSMBuildingLogic::DisplaySampleModel(vtkPolyData* polydata, vtkMRMLScene * mrmlScene)
 {
   this->SetMRMLScene(mrmlScene);
   vtkSlicerModelsLogic* modelsLogic = vtkSlicerModelsLogic::New();
   modelsLogic->SetMRMLScene(mrmlScene);
   vtkMRMLModelNode* modelNode = modelsLogic->AddModel(polydata);
+  //modelNode->GetDisplayNode()->SetColor(1, 0, 0); 
+  //modelNode->GetDisplayNode()->SetName();
   if (modelNode == NULL){
     std::cout<<"empty"<<std::endl;
   }
-  mrmlScene = this->GetMRMLScene();
-  std::cout<<"output "<<this->GetMRMLScene()<<std::endl;
-
-// Switch to a layout (24) that contains a Chart View to initiate the construction of the widget and Chart View Node 
-  /*vtkSmartPointer<vtkCollection> layoutNodes = vtkSmartPointer<vtkCollection>::Take( mrmlScene->GetNodesByClass("vtkMRMLLayoutNode") );
-  layoutNodes->InitTraversal();
-  vtkObject* layoutNodeVtkObject = layoutNodes->GetNextItemAsObject();
-  vtkMRMLLayoutNode* layoutNode = vtkMRMLLayoutNode::SafeDownCast(layoutNodeVtkObject);
-  layoutNode->SetViewArrangement(24);*/
-  
-  mrmlScene->InitTraversal();
-  vtkMRMLLayoutNode* sceneLayoutNode = vtkMRMLLayoutNode::SafeDownCast(mrmlScene->GetNextNodeByClass("vtkMRMLLayoutNode") );
-  sceneLayoutNode->SetViewArrangement(24);
-
-  /*vtkSmartPointer<vtkCollection> chartViewNodes = vtkSmartPointer<vtkCollection>::Take( mrmlScene->GetNodesByClass("vtkMRMLChartViewNode") );
-  chartViewNodes->InitTraversal();
-  vtkObject* chartViewNodeVtkObject = chartViewNodes->GetNextItemAsObject();
-  vtkMRMLChartViewNode* chartViewNode = vtkMRMLChartViewNode::SafeDownCast(chartViewNodeVtkObject);*/
-  // Get the Chart View Node
-  vtkMRMLChartViewNode* chartViewNode = vtkMRMLChartViewNode::SafeDownCast(mrmlScene->GetNextNodeByClass("vtkMRMLChartViewNode") );
-
-  // Create an Array Node and add the eigen value
-  VectorType eigenvalue = statModel->GetPCAVarianceVector();
-  vtkMRMLDoubleArrayNode* doubleArrayNode = vtkMRMLDoubleArrayNode::SafeDownCast(mrmlScene->AddNode(vtkMRMLDoubleArrayNode::New()));
-  vtkDoubleArray* a = doubleArrayNode->GetArray();
-  int nbPrincipalComponent = statModel->GetNumberOfPrincipalComponents();
-  a->SetNumberOfTuples(nbPrincipalComponent);
-  for (int i = 0;i<nbPrincipalComponent;i++){
-    std::cout<<"i "<<i<<std::endl;
-    a->SetComponent(i, 0, i);
-    a->SetComponent(i, 1, eigenvalue[i]);
-    a->SetComponent(i, 2, 0);
-  }
-
-  // Create a Chart Node.
-  vtkMRMLChartNode* chartNode = vtkMRMLChartNode::New();
-  chartNode->AddArray("EigenSpectrum", doubleArrayNode->GetID());
-  mrmlScene->AddNode(chartNode);
-  
-  // Set properties on the Chart
-  chartNode->SetProperty("default", "title", "EigenSpectrum");
-  chartNode->SetProperty("default", "xAxisLabel", "Principal components");
-  chartNode->SetProperty("default", "yAxisLabel", "Eigen value");
-  chartNode->SetProperty("default", "type", "Line");
-  
-  // Tell the Chart View which Chart to display
-  chartViewNode->SetChartNodeID(chartNode->GetID());
 }
 
 void vtkSlicerLoadableSSMBuildingLogic::ObserveMRMLScene()

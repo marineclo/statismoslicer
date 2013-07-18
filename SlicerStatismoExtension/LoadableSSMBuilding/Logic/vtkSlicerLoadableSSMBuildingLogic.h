@@ -28,11 +28,6 @@
 #include "vtkSlicerModuleLogic.h"
 #include "vtkSlicerModelsLogic.h"
 
-// Statismo includes
-#include "statismo/StatisticalModel.h"
-#include "Representers/VTK/vtkPolyDataRepresenter.h"
-#include <vtkPolyData.h>
-
 // VTK includes
 #include "vtkPolyData.h"
 // MRML includes
@@ -41,10 +36,6 @@
 #include <cstdlib>
 
 #include "vtkSlicerLoadableSSMBuildingModuleLogicExport.h"
-
-using namespace statismo;
-typedef vtkPolyDataRepresenter RepresenterType;
-typedef StatisticalModel<RepresenterType> StatisticalModelType;
 
 /// \ingroup Slicer_QtModules_ExtensionTemplate
 class VTK_SLICER_LOADABLESSMBUILDING_MODULE_LOGIC_EXPORT vtkSlicerLoadableSSMBuildingLogic :
@@ -56,7 +47,7 @@ public:
   vtkTypeMacro(vtkSlicerLoadableSSMBuildingLogic, vtkSlicerModuleLogic);
   void PrintSelf(ostream& os, vtkIndent indent);
   void SetModelsLogic(vtkSlicerModelsLogic* modelsLogic);
-  void DisplaySampleModel(vtkPolyData* polydata, vtkMRMLScene * mrmlScene, StatisticalModelType* statModel);
+  void DisplaySampleModel(vtkPolyData* polydata, vtkMRMLScene * mrmlScene);
   
 protected:
   vtkSlicerLoadableSSMBuildingLogic();
