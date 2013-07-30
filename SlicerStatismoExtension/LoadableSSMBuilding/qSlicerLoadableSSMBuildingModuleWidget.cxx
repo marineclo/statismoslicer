@@ -28,6 +28,9 @@
 #include "Representers/VTK/vtkPolyDataRepresenter.h"
 #include <vtkPolyData.h>
 //#include <vtkPolyDataWriter.h>
+#include "itkMeshRepresenter.h"
+#include "itkMesh.h"
+#include "statismo_ITK/itkStatisticalModel.h"
 
 // LoadableSSMBuilding Logic includes
 #include "vtkSlicerLoadableSSMBuildingLogic.h"
@@ -41,10 +44,17 @@
 #include "vtkMRMLChartViewNode.h"
 #include "vtkMRMLChartNode.h"
 
+#include "vtkCellArray.h"
+#include "itkPoint.h"
 
 using namespace statismo;
-typedef vtkPolyDataRepresenter RepresenterType;
-typedef StatisticalModel<RepresenterType> StatisticalModelType;
+typedef vtkPolyDataRepresenter VtkRepresenterType;
+typedef StatisticalModel<VtkRepresenterType> VtkStatisticalModelType;
+
+const unsigned Dimensions = 3;
+typedef itk::Mesh<float, Dimensions > MeshType;
+typedef itk::MeshRepresenter<float, Dimensions> ItkRepresenterType;
+typedef itk::StatisticalModel<ItkRepresenterType> ItkStatisticalModelType;
 
 //-----------------------------------------------------------------------------
 /// \ingroup Slicer_QtModules_ExtensionTemplate
@@ -53,9 +63,12 @@ class qSlicerLoadableSSMBuildingModuleWidgetPrivate: public Ui_qSlicerLoadableSS
 public:
   qSlicerLoadableSSMBuildingModuleWidgetPrivate();
 
-  StatisticalModelType* statModel;
-  void setStatModel(StatisticalModelType* newStatModel);
-  StatisticalModelType* getStatModel();
+  VtkStatisticalModelType* vtkStatModel;
+  void setVtkStatModel(VtkStatisticalModelType* newVtkStatModel);
+  VtkStatisticalModelType* getVtkStatModel();
+  ItkStatisticalModelType* itkStatModel;
+  void setItkStatModel(ItkStatisticalModelType* newItkStatModel);
+  ItkStatisticalModelType* getItkStatModel();
 };
 
 //-----------------------------------------------------------------------------
@@ -66,15 +79,26 @@ qSlicerLoadableSSMBuildingModuleWidgetPrivate::qSlicerLoadableSSMBuildingModuleW
 {
 }
 
-void qSlicerLoadableSSMBuildingModuleWidgetPrivate::setStatModel(StatisticalModelType* newStatModel)
+void qSlicerLoadableSSMBuildingModuleWidgetPrivate::setVtkStatModel(VtkStatisticalModelType* newVtkStatModel)
 {
-  this->statModel = newStatModel;
+  this->vtkStatModel = newVtkStatModel;
 }
 
-StatisticalModelType* qSlicerLoadableSSMBuildingModuleWidgetPrivate::getStatModel()
+VtkStatisticalModelType* qSlicerLoadableSSMBuildingModuleWidgetPrivate::getVtkStatModel()
 {
-  StatisticalModelType* newStatModel;
-  return newStatModel = this->statModel;
+  VtkStatisticalModelType* newVtkStatModel;
+  return newVtkStatModel = this->vtkStatModel;
+}
+
+void qSlicerLoadableSSMBuildingModuleWidgetPrivate::setItkStatModel(ItkStatisticalModelType* newItkStatModel)
+{
+  this->itkStatModel = newItkStatModel;
+}
+
+ItkStatisticalModelType* qSlicerLoadableSSMBuildingModuleWidgetPrivate::getItkStatModel()
+{
+  ItkStatisticalModelType* newItkStatModel;
+  return newItkStatModel = this->itkStatModel;
 }
 //-----------------------------------------------------------------------------
 // qSlicerLoadableSSMBuildingModuleWidget methods
@@ -106,18 +130,94 @@ void qSlicerLoadableSSMBuildingModuleWidget::onSelectInputModel()
   QString inputFile = QFileDialog::getOpenFileName(this, "Select input model", QString());
   d->modelNamePath->setText(inputFile);
   // Load the model
-  std::string modelString = inputFile.toStdString(); 
-  d->setStatModel(d->statModel->Load(modelString.c_str()));
-  // Display Eigen spectrum
-  displayEigenSpectrum();
-  // Set the number of components for the pcSlider
-  d->pcSlider->setMaximum(d->statModel->GetNumberOfPrincipalComponents());
+  std::string modelString = inputFile.toStdString();
+  if (d->radioButtonVTK->isChecked()){
+    try {
+      d->setVtkStatModel(d->vtkStatModel->Load(modelString.c_str()));
 
-  //Calculate mean
-  vtkPolyData* meanModel = d->statModel->DrawMean();
-  // Add mean model to the scene
-  vtkSlicerLoadableSSMBuildingLogic* moduleLogic = vtkSlicerLoadableSSMBuildingLogic::New();
-  moduleLogic->DisplaySampleModel(meanModel, this->mrmlScene());
+      // Display Eigen spectrum
+      displayEigenSpectrum();
+      // Set the number of components for the pcSlider
+      d->pcSlider->setMaximum(d->vtkStatModel->GetNumberOfPrincipalComponents());
+
+      //Calculate mean
+      vtkPolyData* meanModel = d->vtkStatModel->DrawMean();
+      // Add mean model to the scene
+      vtkSlicerLoadableSSMBuildingLogic* moduleLogic = vtkSlicerLoadableSSMBuildingLogic::New();
+      moduleLogic->DisplaySampleModel(meanModel, this->mrmlScene());
+
+    }
+	  catch (StatisticalModelException& e) {
+		  std::cout << "Exception occured while building the shape model" << std::endl;
+		  std::cout << e.what() << std::endl;
+	  }
+  }
+  if (d->radioButtonITK->isChecked()){
+    try {
+      ItkStatisticalModelType* modelITK = ItkStatisticalModelType::New();
+      modelITK->Load(modelString.c_str());
+      d->setItkStatModel(modelITK);
+      //d->setItkStatModel(d->itkStatModel->Load(modelString.c_str()));
+
+      // Display Eigen spectrum
+      displayEigenSpectrum();
+      // Set the number of components for the pcSlider
+      d->pcSlider->setMaximum(d->itkStatModel->GetNumberOfPrincipalComponents());
+
+      //Calculate mean
+      //vtkPolyData* meanModel = d->itkStatModel->DrawMean();
+      MeshType* meanItkModel = d->itkStatModel->DrawMean();
+      
+      //Create a new vtkPolyData
+      vtkPolyData* newPolyData = vtkPolyData::New();
+
+      //Create vtkPoints for insertion into newPolyData
+      vtkPoints *points = vtkPoints::New();
+      std::cout<<"Points = "<<meanItkModel->GetNumberOfPoints()<<std::endl;
+
+      //Copy all points into the vtkPolyData structure
+      typedef MeshType::PointsContainer::ConstIterator  PointIterator;
+      PointIterator pntIterator = meanItkModel->GetPoints()->Begin();
+      PointIterator pntItEnd = meanItkModel->GetPoints()->End();
+      for (int i = 0; pntIterator != pntItEnd; ++i, ++pntIterator)
+      {
+        MeshType::PointType pnt = pntIterator.Value();
+        points->InsertPoint(i, pnt[0], pnt[1], pnt[2]);
+      }
+      newPolyData->SetPoints(points);
+      points->Delete();
+
+      //Copy all cells into the vtkPolyData structure
+      //Creat vtkCellArray into which the cells are copied
+      vtkCellArray* triangle = vtkCellArray::New();
+      typedef MeshType::CellsContainer::ConstIterator  CellIterator;
+      CellIterator cellIt = meanItkModel->GetCells()->Begin();
+      CellIterator cellItEnd = meanItkModel->GetCells()->End();
+      for (int it = 0; cellIt != cellItEnd; ++it, ++cellIt)
+      {
+        MeshType::CellType * cellptr = cellIt.Value();
+        MeshType::CellType::PointIdIterator pntIdIter = cellptr->PointIdsBegin();
+        MeshType::CellType::PointIdIterator pntIdEnd = cellptr->PointIdsEnd();
+        vtkIdList* pts = vtkIdList::New();
+        for (; pntIdIter != pntIdEnd; ++pntIdIter)
+        {
+          pts->InsertNextId( *pntIdIter );
+        }
+        triangle->InsertNextCell(pts);
+       }
+       newPolyData->SetPolys(triangle);
+       triangle->Delete();
+      // Add mean model to the scene
+      //vtkSlicerLoadableSSMBuildingLogic* moduleLogic = vtkSlicerLoadableSSMBuildingLogic::New();
+      //moduleLogic->DisplaySampleModel(meanModel, this->mrmlScene());
+
+    }
+	  catch (itk::ExceptionObject& o) {
+		  std::cout << "Exception occured while building the shape model" << std::endl;
+		  std::cout << o << std::endl;
+	 }
+ }
+  
 }
 
 //-----------------------------------------------------------------------------
@@ -127,12 +227,12 @@ void qSlicerLoadableSSMBuildingModuleWidget::onSelect()
   using std::auto_ptr;
   Q_D(qSlicerLoadableSSMBuildingModuleWidget);
   // Get the model name selected by the user
-  d->statModel = d->getStatModel();
-  int nbPrincipalComponent = d->statModel->GetNumberOfPrincipalComponents();
+  d->vtkStatModel = d->getVtkStatModel();
+  int nbPrincipalComponent = d->vtkStatModel->GetNumberOfPrincipalComponents();
   VectorType coefficients = VectorType::Zero(nbPrincipalComponent);
-  int pc = static_cast<int>(d->pcSlider->value())-1; // -1 bacause user can choose between 1 and max
+  int pc = static_cast<int>(d->pcSlider->value())-1; // -1 because user can choose between 1 and max
   coefficients(pc) = d->stdSlider->value();
-  vtkPolyData* samplePC = d->statModel->DrawSample(coefficients);
+  vtkPolyData* samplePC = d->vtkStatModel->DrawSample(coefficients);
   
   // Add polydata sample to the scene
   vtkSlicerLoadableSSMBuildingLogic* moduleLogic = vtkSlicerLoadableSSMBuildingLogic::New();
@@ -164,9 +264,26 @@ void qSlicerLoadableSSMBuildingModuleWidget::setMRMLScene(vtkMRMLScene* mrmlScen
 void qSlicerLoadableSSMBuildingModuleWidget::displayEigenSpectrum()
 {
   Q_D(qSlicerLoadableSSMBuildingModuleWidget);
+  std::vector<statismo::ScalarType> eigenvalueVector;
+  int nbPrincipalComponent;
   // Get the model name selected by the user
-  d->statModel = d->getStatModel();
-
+  if (d->radioButtonVTK->isChecked()){
+    VtkStatisticalModelType* statModel = d->getVtkStatModel();
+    VectorType eigenvalue = statModel->GetPCAVarianceVector();
+    for (int i=0;i<eigenvalue.rows();i++){
+      eigenvalueVector.push_back(eigenvalue[i]);
+    }
+    nbPrincipalComponent = statModel->GetNumberOfPrincipalComponents();
+  }
+  if (d->radioButtonITK->isChecked()){
+    ItkStatisticalModelType* statModel = d->getItkStatModel();
+    typedef vnl_vector<statismo::ScalarType> itkVectorType;
+    itkVectorType itkEigenvalue = statModel->GetPCAVarianceVector(); 
+    for (int i=0;i<itkEigenvalue.size();i++){
+      eigenvalueVector.push_back(itkEigenvalue(i));
+    }
+    nbPrincipalComponent = statModel->GetNumberOfPrincipalComponents();
+  }
   // Switch to a layout (24) that contains a Chart View to initiate the construction of the widget and Chart View Node 
   vtkMRMLScene* mrmlScene = this->mrmlScene();
   mrmlScene->InitTraversal();
@@ -177,14 +294,14 @@ void qSlicerLoadableSSMBuildingModuleWidget::displayEigenSpectrum()
   vtkMRMLChartViewNode* chartViewNode = vtkMRMLChartViewNode::SafeDownCast(mrmlScene->GetNextNodeByClass("vtkMRMLChartViewNode") );
 
   // Create an Array Node and add the eigen value
-  VectorType eigenvalue = d->statModel->GetPCAVarianceVector();
+  //VectorType eigenvalue = statModel->GetPCAVarianceVector();
   vtkMRMLDoubleArrayNode* doubleArrayNode = vtkMRMLDoubleArrayNode::SafeDownCast(mrmlScene->AddNode(vtkMRMLDoubleArrayNode::New()));
   vtkDoubleArray* a = doubleArrayNode->GetArray();
-  int nbPrincipalComponent = d->statModel->GetNumberOfPrincipalComponents();
+  //int nbPrincipalComponent = statModel->GetNumberOfPrincipalComponents();
   a->SetNumberOfTuples(nbPrincipalComponent);
   for (int i = 0;i<nbPrincipalComponent;i++){
     a->SetComponent(i, 0, i);
-    a->SetComponent(i, 1, eigenvalue[i]);
+    a->SetComponent(i, 1, eigenvalueVector[i]);
     a->SetComponent(i, 2, 0);
   }
 

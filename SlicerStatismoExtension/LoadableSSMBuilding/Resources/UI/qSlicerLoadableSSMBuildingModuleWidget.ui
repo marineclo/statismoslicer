@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>525</width>
-    <height>319</height>
+    <width>551</width>
+    <height>421</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,77 +15,176 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="ctkCollapsibleButton" name="CTKCollapsibleButton">
+    <widget class="ctkCollapsibleButton" name="CollapsibleButton">
      <property name="text">
-      <string>Parameters</string>
+      <string>Registration</string>
      </property>
-     <layout class="QGridLayout" name="gridLayout">
+     <layout class="QGridLayout" name="gridLayout1">
       <property name="margin">
        <number>0</number>
       </property>
       <item row="0" column="0">
-       <widget class="QLabel" name="inputModel">
+       <widget class="QLabel" name="nb Points For Nystrom Approx">
         <property name="text">
-         <string>Input Model</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="PC">
-        <property name="text">
-         <string>Principal Component</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="3">
-       <widget class="ctkSliderWidget" name="pcSlider">
-        <property name="decimals">
-         <number>0</number>
-        </property>
-        <property name="minimum">
-         <double>1.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>10.000000000000000</double>
+         <string>Nystrom Approx</string>
         </property>
        </widget>
       </item>
       <item row="3" column="0">
-       <widget class="QLabel" name="std">
+       <widget class="QLabel" name="SigmaMinNumber">
         <property name="text">
-         <string>Standard deviation</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3">
-       <widget class="QPushButton" name="inputModelButton">
-        <property name="text">
-         <string>Open Model</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="3">
-       <widget class="QLineEdit" name="modelNamePath"/>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="modelName">
-        <property name="text">
-         <string>Model Name</string>
+         <string>Sigma min</string>
         </property>
        </widget>
       </item>
       <item row="3" column="3">
-       <widget class="ctkSliderWidget" name="stdSlider">
-        <property name="decimals">
-         <number>0</number>
-        </property>
-        <property name="minimum">
-         <double>-10.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>10.000000000000000</double>
+       <widget class="QLabel" name="SigmaMaxNumber">
+        <property name="text">
+         <string>Sigma max</string>
         </property>
        </widget>
+      </item>
+      <item row="3" column="4">
+       <widget class="QLineEdit" name="SigmaMaxEntry"/>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="NystromEntry"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="LevelsNumber">
+        <property name="text">
+         <string>num Levels</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="LevelsEntry"/>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="SigmaMinEntry"/>
+      </item>
+      <item row="4" column="3">
+       <widget class="QLabel" name="ComponentsNumber">
+        <property name="text">
+         <string>Nb Components</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="4">
+       <widget class="QLineEdit" name="ComponentsEntry"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="ctkCollapsibleButton" name="CTKCollapsibleButton">
+     <property name="text">
+      <string>Display Parameters</string>
+     </property>
+     <layout class="QVBoxLayout" name="boxLayout">
+      <item>
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>Model Type</string>
+        </property>
+        <widget class="QRadioButton" name="radioButtonITK">
+         <property name="geometry">
+          <rect>
+           <x>140</x>
+           <y>0</y>
+           <width>116</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>ITK Model</string>
+         </property>
+        </widget>
+        <widget class="QRadioButton" name="radioButtonVTK">
+         <property name="geometry">
+          <rect>
+           <x>350</x>
+           <y>0</y>
+           <width>116</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>VTK Model</string>
+         </property>
+        </widget>
+       </widget>
+      </item>
+      <item>
+       <layout class="QGridLayout" name="gridLayout2">
+        <property name="margin">
+         <number>0</number>
+        </property>
+        <item row="1" column="0">
+         <widget class="QLabel" name="inputModel">
+          <property name="text">
+           <string>Input Model</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="PC">
+          <property name="text">
+           <string>Principal Component</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="ctkSliderWidget" name="pcSlider">
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="minimum">
+           <double>1.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="std">
+          <property name="text">
+           <string>Standard deviation</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QPushButton" name="inputModelButton">
+          <property name="text">
+           <string>Open Model</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLineEdit" name="modelNamePath"/>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="modelName">
+          <property name="text">
+           <string>Model Name</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="ctkSliderWidget" name="stdSlider">
+          <property name="decimals">
+           <number>0</number>
+          </property>
+          <property name="minimum">
+           <double>-10.000000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>10.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>
