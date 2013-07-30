@@ -27,10 +27,12 @@
 #include "statismo/StatisticalModel.h"
 #include "Representers/VTK/vtkPolyDataRepresenter.h"
 #include <vtkPolyData.h>
-//#include <vtkPolyDataWriter.h>
+#include <vtkPolyDataReader.h>
+
 #include "itkMeshRepresenter.h"
 #include "itkMesh.h"
 #include "statismo_ITK/itkStatisticalModel.h"
+#include "itkMeshFileWriter.h"
 
 // LoadableSSMBuilding Logic includes
 #include "vtkSlicerLoadableSSMBuildingLogic.h"
@@ -44,8 +46,6 @@
 #include "vtkMRMLChartViewNode.h"
 #include "vtkMRMLChartNode.h"
 
-#include "vtkCellArray.h"
-#include "itkPoint.h"
 
 using namespace statismo;
 typedef vtkPolyDataRepresenter VtkRepresenterType;
@@ -55,7 +55,7 @@ const unsigned Dimensions = 3;
 typedef itk::Mesh<float, Dimensions > MeshType;
 typedef itk::MeshRepresenter<float, Dimensions> ItkRepresenterType;
 typedef itk::StatisticalModel<ItkRepresenterType> ItkStatisticalModelType;
-
+typedef vnl_vector<statismo::ScalarType> itkVectorType;
 //-----------------------------------------------------------------------------
 /// \ingroup Slicer_QtModules_ExtensionTemplate
 class qSlicerLoadableSSMBuildingModuleWidgetPrivate: public Ui_qSlicerLoadableSSMBuildingModuleWidget
@@ -165,51 +165,21 @@ void qSlicerLoadableSSMBuildingModuleWidget::onSelectInputModel()
       d->pcSlider->setMaximum(d->itkStatModel->GetNumberOfPrincipalComponents());
 
       //Calculate mean
-      //vtkPolyData* meanModel = d->itkStatModel->DrawMean();
-      MeshType* meanItkModel = d->itkStatModel->DrawMean();
-      
-      //Create a new vtkPolyData
-      vtkPolyData* newPolyData = vtkPolyData::New();
+      MeshType::Pointer meanItkModel = d->itkStatModel->DrawMean();
+	     itk::MeshFileWriter<MeshType>::Pointer writer = itk::MeshFileWriter<MeshType>::New();
+	     writer->SetFileName("meanItkModel.vtk");
+	     writer->SetInput(meanItkModel);
+	     writer->Update();
 
-      //Create vtkPoints for insertion into newPolyData
-      vtkPoints *points = vtkPoints::New();
-      std::cout<<"Points = "<<meanItkModel->GetNumberOfPoints()<<std::endl;
+	     vtkPolyDataReader* reader = vtkPolyDataReader::New();
+      reader->SetFileName("meanItkModel.vtk");
+      reader->Update();
+      vtkPolyData* meanModel = vtkPolyData::New();
+      meanModel->ShallowCopy(reader->GetOutput());
 
-      //Copy all points into the vtkPolyData structure
-      typedef MeshType::PointsContainer::ConstIterator  PointIterator;
-      PointIterator pntIterator = meanItkModel->GetPoints()->Begin();
-      PointIterator pntItEnd = meanItkModel->GetPoints()->End();
-      for (int i = 0; pntIterator != pntItEnd; ++i, ++pntIterator)
-      {
-        MeshType::PointType pnt = pntIterator.Value();
-        points->InsertPoint(i, pnt[0], pnt[1], pnt[2]);
-      }
-      newPolyData->SetPoints(points);
-      points->Delete();
-
-      //Copy all cells into the vtkPolyData structure
-      //Creat vtkCellArray into which the cells are copied
-      vtkCellArray* triangle = vtkCellArray::New();
-      typedef MeshType::CellsContainer::ConstIterator  CellIterator;
-      CellIterator cellIt = meanItkModel->GetCells()->Begin();
-      CellIterator cellItEnd = meanItkModel->GetCells()->End();
-      for (int it = 0; cellIt != cellItEnd; ++it, ++cellIt)
-      {
-        MeshType::CellType * cellptr = cellIt.Value();
-        MeshType::CellType::PointIdIterator pntIdIter = cellptr->PointIdsBegin();
-        MeshType::CellType::PointIdIterator pntIdEnd = cellptr->PointIdsEnd();
-        vtkIdList* pts = vtkIdList::New();
-        for (; pntIdIter != pntIdEnd; ++pntIdIter)
-        {
-          pts->InsertNextId( *pntIdIter );
-        }
-        triangle->InsertNextCell(pts);
-       }
-       newPolyData->SetPolys(triangle);
-       triangle->Delete();
       // Add mean model to the scene
-      //vtkSlicerLoadableSSMBuildingLogic* moduleLogic = vtkSlicerLoadableSSMBuildingLogic::New();
-      //moduleLogic->DisplaySampleModel(meanModel, this->mrmlScene());
+      vtkSlicerLoadableSSMBuildingLogic* moduleLogic = vtkSlicerLoadableSSMBuildingLogic::New();
+      moduleLogic->DisplaySampleModel(meanModel, this->mrmlScene());
 
     }
 	  catch (itk::ExceptionObject& o) {
@@ -226,14 +196,34 @@ void qSlicerLoadableSSMBuildingModuleWidget::onSelect()
   /**** VTK Model ****/
   using std::auto_ptr;
   Q_D(qSlicerLoadableSSMBuildingModuleWidget);
+  vtkPolyData* samplePC = vtkPolyData::New();
   // Get the model name selected by the user
-  d->vtkStatModel = d->getVtkStatModel();
-  int nbPrincipalComponent = d->vtkStatModel->GetNumberOfPrincipalComponents();
-  VectorType coefficients = VectorType::Zero(nbPrincipalComponent);
-  int pc = static_cast<int>(d->pcSlider->value())-1; // -1 because user can choose between 1 and max
-  coefficients(pc) = d->stdSlider->value();
-  vtkPolyData* samplePC = d->vtkStatModel->DrawSample(coefficients);
-  
+  if (d->radioButtonVTK->isChecked()){
+    d->vtkStatModel = d->getVtkStatModel();
+    int nbPrincipalComponent = d->vtkStatModel->GetNumberOfPrincipalComponents();
+    VectorType coefficients = VectorType::Zero(nbPrincipalComponent);
+    int pc = static_cast<int>(d->pcSlider->value())-1; // -1 because user can choose between 1 and max
+    coefficients(pc) = d->stdSlider->value();
+    samplePC = d->vtkStatModel->DrawSample(coefficients);
+  }
+  if (d->radioButtonITK->isChecked()){
+    d->itkStatModel = d->getItkStatModel();
+    int nbPrincipalComponent = d->itkStatModel->GetNumberOfPrincipalComponents();
+    itkVectorType coefficients(nbPrincipalComponent,0.0); // set the vector to 0
+    int pc = static_cast<int>(d->pcSlider->value())-1; // -1 because user can choose between 1 and max
+    coefficients(pc) = d->stdSlider->value();
+    MeshType::Pointer itkSamplePC = d->itkStatModel->DrawSample(coefficients);
+    
+    itk::MeshFileWriter<MeshType>::Pointer writer = itk::MeshFileWriter<MeshType>::New();
+    writer->SetFileName("itkSamplePC.vtk");
+    writer->SetInput(itkSamplePC);
+    writer->Update();
+
+    vtkPolyDataReader* reader = vtkPolyDataReader::New();
+    reader->SetFileName("itkSamplePC.vtk");
+    reader->Update();
+    samplePC->ShallowCopy(reader->GetOutput());
+  } 
   // Add polydata sample to the scene
   vtkSlicerLoadableSSMBuildingLogic* moduleLogic = vtkSlicerLoadableSSMBuildingLogic::New();
   moduleLogic->DisplaySampleModel(samplePC, this->mrmlScene());
@@ -277,7 +267,6 @@ void qSlicerLoadableSSMBuildingModuleWidget::displayEigenSpectrum()
   }
   if (d->radioButtonITK->isChecked()){
     ItkStatisticalModelType* statModel = d->getItkStatModel();
-    typedef vnl_vector<statismo::ScalarType> itkVectorType;
     itkVectorType itkEigenvalue = statModel->GetPCAVarianceVector(); 
     for (int i=0;i<itkEigenvalue.size();i++){
       eigenvalueVector.push_back(itkEigenvalue(i));
