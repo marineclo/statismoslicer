@@ -45,33 +45,102 @@
        </widget>
       </item>
       <item row="3" column="4">
-       <widget class="QLineEdit" name="SigmaMaxEntry"/>
+       <widget class="QLineEdit" name="sigmaUpper">
+        <property name="text">
+         <string>30</string>
+        </property>
+       </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="NystromEntry"/>
+       <widget class="QLineEdit" name="numPointsForNystrom">
+        <property name="text">
+         <string>300</string>
+        </property>
+       </widget>
       </item>
-      <item row="4" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="LevelsNumber">
         <property name="text">
          <string>num Levels</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="1">
-       <widget class="QLineEdit" name="LevelsEntry"/>
+      <item row="5" column="1">
+       <widget class="QLineEdit" name="numLevels">
+        <property name="text">
+         <string>10</string>
+        </property>
+       </widget>
       </item>
       <item row="3" column="1">
-       <widget class="QLineEdit" name="SigmaMinEntry"/>
+       <widget class="QLineEdit" name="sigmaLower">
+        <property name="text">
+         <string>5</string>
+        </property>
+       </widget>
       </item>
-      <item row="4" column="3">
+      <item row="5" column="3">
        <widget class="QLabel" name="ComponentsNumber">
         <property name="text">
          <string>Nb Components</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="4">
-       <widget class="QLineEdit" name="ComponentsEntry"/>
+      <item row="5" column="4">
+       <widget class="QLineEdit" name="numComponents">
+        <property name="text">
+         <string>100</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0" colspan="5">
+       <widget class="QPushButton" name="pushButtonRegistration">
+        <property name="text">
+         <string>Perform Registration</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1">
+       <widget class="QLineEdit" name="sigma2">
+        <property name="text">
+         <string>20</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Sigma</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0" colspan="5">
+       <widget class="QPushButton" name="pushButtonPartiallyFixedModel">
+        <property name="text">
+         <string>Build Partially Fixed Model</string>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="0" colspan="5">
+       <widget class="QPushButton" name="pushButtonModelFitting">
+        <property name="text">
+         <string>Shape Model Fitting</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0">
+       <widget class="QLabel" name="regularization">
+        <property name="text">
+         <string>Regularization</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="1">
+       <widget class="QLineEdit" name="regularizationParameter">
+        <property name="text">
+         <string>0.001</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -143,7 +212,7 @@
            <double>1.000000000000000</double>
           </property>
           <property name="maximum">
-           <double>10.000000000000000</double>
+           <double>100.000000000000000</double>
           </property>
          </widget>
         </item>
@@ -232,8 +301,8 @@
    <slot>onSelect()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>239</x>
-     <y>115</y>
+     <x>531</x>
+     <y>365</y>
     </hint>
     <hint type="destinationlabel">
      <x>122</x>
@@ -248,8 +317,8 @@
    <slot>onSelect()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>365</x>
-     <y>158</y>
+     <x>531</x>
+     <y>374</y>
     </hint>
     <hint type="destinationlabel">
      <x>367</x>
@@ -264,8 +333,8 @@
    <slot>onSelectInputModel()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>299</x>
-     <y>50</y>
+     <x>531</x>
+     <y>307</y>
     </hint>
     <hint type="destinationlabel">
      <x>155</x>
@@ -273,9 +342,60 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>pushButtonRegistration</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>qSlicerLoadableSSMBuildingModuleWidget</receiver>
+   <slot>onPerformedRegistration()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>64</x>
+     <y>118</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>4</x>
+     <y>150</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonPartiallyFixedModel</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>qSlicerLoadableSSMBuildingModuleWidget</receiver>
+   <slot>onBuildPartiallyFixedModel()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>535</x>
+     <y>150</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>549</x>
+     <y>236</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButtonModelFitting</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>qSlicerLoadableSSMBuildingModuleWidget</receiver>
+   <slot>onShapeModelFitting()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>502</x>
+     <y>192</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>547</x>
+     <y>208</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>onSelect()</slot>
   <slot>onSelectInputModel()</slot>
+  <slot>onPerformedRegistration()</slot>
+  <slot>onBuildPartiallyFixedModel()</slot>
+  <slot>onShapeModelFitting()</slot>
  </slots>
 </ui>

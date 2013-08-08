@@ -22,6 +22,10 @@
 #include "qSlicerAbstractModuleWidget.h"
 
 #include "qSlicerLoadableSSMBuildingModuleExport.h"
+#include "itkPoint.h"
+
+typedef std::vector<std::string> StringVectorType;
+typedef itk::Point<double, 3> PointType;
 
 class qSlicerLoadableSSMBuildingModuleWidgetPrivate;
 class vtkMRMLNode;
@@ -38,10 +42,16 @@ public:
   qSlicerLoadableSSMBuildingModuleWidget(QWidget *parent=0);
   virtual ~qSlicerLoadableSSMBuildingModuleWidget();
   void displayEigenSpectrum();
+  std::vector<PointType> readLandmarks(const std::string& filename);
+  int getdir (std::string dir, StringVectorType &files, std::string nameImage, const std::string& extension, std::string &ref, std::string numRef);
+  int getdir2 (std::string dir, StringVectorType &files, std::string nameImage, const std::string& extension);
 
 public slots:
   void onSelect();
   void onSelectInputModel();
+  void onPerformedRegistration();
+  void onBuildPartiallyFixedModel();
+  void onShapeModelFitting();
 
 protected:
   QScopedPointer<qSlicerLoadableSSMBuildingModuleWidgetPrivate> d_ptr;
