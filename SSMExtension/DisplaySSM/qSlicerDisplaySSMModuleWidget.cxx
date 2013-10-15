@@ -47,6 +47,7 @@
 // DisplaySSM Logic includes
 #include "vtkSlicerDisplaySSMLogic.h"
 
+#include <vtkNew.h>
 #include "vtkMRMLModelNode.h"
 #include "vtkMRMLModelDisplayNode.h"
 #include "vtkMRMLScene.h"
@@ -274,19 +275,19 @@ void qSlicerDisplaySSMModuleWidget::onSelectInputModel()
     //vtkSlicerDisplaySSMLogic* moduleLogic = vtkSlicerDisplaySSMLogic::New();
     //moduleLogic->DisplaySampleModel(meanModel, this->mrmlScene());
 
-    vtkMRMLModelNode* sampleNode = vtkMRMLModelNode::New();
+    vtkNew<vtkMRMLModelNode> sampleNode;
     sampleNode->SetScene(this->mrmlScene());
     sampleNode->SetName("Sample");
     sampleNode->SetAndObservePolyData(meanModel);
 
-    vtkMRMLModelDisplayNode* modelDisplayNode = vtkMRMLModelDisplayNode::New();
+    vtkNew<vtkMRMLModelDisplayNode> modelDisplayNode;
     //modelDisplayNode->SetColor(0,1,0); // green
     modelDisplayNode->SetScene(this->mrmlScene());
-    this->mrmlScene()->AddNode(modelDisplayNode);
+    this->mrmlScene()->AddNode(modelDisplayNode.GetPointer());
     sampleNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
 
     modelDisplayNode->SetInputPolyData(sampleNode->GetPolyData());
-    this->mrmlScene()->AddNode(sampleNode);
+    this->mrmlScene()->AddNode(sampleNode.GetPointer());
     std::cout<<"test7"<<std::endl;
 
     meanModel->Delete();
