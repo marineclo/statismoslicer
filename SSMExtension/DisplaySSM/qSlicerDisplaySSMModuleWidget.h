@@ -23,6 +23,15 @@
 
 #include "qSlicerDisplaySSMModuleExport.h"
 
+#include "itkMeshRepresenter.h"
+#include "statismo_ITK/itkStatisticalModel.h"
+
+const unsigned Dimensions = 3;
+typedef itk::MeshRepresenter<float, Dimensions> ItkRepresenterType;
+typedef itk::StatisticalModel<ItkRepresenterType> ItkStatisticalModelType;
+
+
+
 class qSlicerDisplaySSMModuleWidgetPrivate;
 class vtkMRMLNode;
 
@@ -37,14 +46,17 @@ public:
   typedef qSlicerAbstractModuleWidget Superclass;
   qSlicerDisplaySSMModuleWidget(QWidget *parent=0);
   virtual ~qSlicerDisplaySSMModuleWidget();
+  void displayEigenSpectrum(ItkStatisticalModelType* statModel);
 
 public slots:
-
+  void onSelect();
+  void onSelectInputModel();
 
 protected:
   QScopedPointer<qSlicerDisplaySSMModuleWidgetPrivate> d_ptr;
   
   virtual void setup();
+  virtual void setMRMLScene(vtkMRMLScene *scene);
 
 private:
   Q_DECLARE_PRIVATE(qSlicerDisplaySSMModuleWidget);

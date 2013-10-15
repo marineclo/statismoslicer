@@ -61,6 +61,9 @@ ExternalProject_Add(${proj}
     -DEXTENSION_SUPERBUILD_BINARY_DIR:PATH=${${EXTENSION_NAME}_BINARY_DIR}
     # Slicer
     -DSlicer_DIR:PATH=${Slicer_DIR}
+
+    # Statismo
+    -DStatismo_DIR:PATH=${Statismo_DIR}
     ${ep_cmake_args}
   DEPENDS
     ${${proj}_DEPENDENCIES}

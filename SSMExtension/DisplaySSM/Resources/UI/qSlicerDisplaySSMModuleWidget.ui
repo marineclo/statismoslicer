@@ -15,13 +15,77 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="ctkCollapsibleButton" name="CTKCollapsibleButton" native="true">
-     <property name="text" stdset="0">
-      <string>Display</string>
+    <widget class="ctkCollapsibleButton" name="CTKCollapsibleButton">
+     <property name="text">
+      <string>Parameters</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
-      <item>
-       <widget class="qSlicerDisplaySSMFooBarWidget" name="FooBar" native="true"/>
+     <layout class="QGridLayout" name="gridLayout">
+      <property name="margin">
+       <number>0</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="inputModel">
+        <property name="text">
+         <string>Input Model</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="PC">
+        <property name="text">
+         <string>Principal Component</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="ctkSliderWidget" name="pcSlider">
+        <property name="decimals">
+         <number>0</number>
+        </property>
+        <property name="minimum">
+         <double>1.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="std">
+        <property name="text">
+         <string>Standard deviation</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QPushButton" name="inputModelButton">
+        <property name="text">
+         <string>Open Model</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QLineEdit" name="modelNamePath"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="modelName">
+        <property name="text">
+         <string>Model Name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="ctkSliderWidget" name="stdSlider">
+        <property name="decimals">
+         <number>0</number>
+        </property>
+        <property name="minimum">
+         <double>-10.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10.000000000000000</double>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -55,12 +119,64 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>qSlicerDisplaySSMFooBarWidget</class>
+   <class>ctkSliderWidget</class>
    <extends>QWidget</extends>
-   <header>qSlicerDisplaySSMFooBarWidget.h</header>
-   <container>1</container>
+   <header>ctkSliderWidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>pcSlider</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>qSlicerDisplaySSMModuleWidget</receiver>
+   <slot>onSelect()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>239</x>
+     <y>115</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>122</x>
+     <y>196</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>stdSlider</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>qSlicerDisplaySSMModuleWidget</receiver>
+   <slot>onSelect()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>365</x>
+     <y>158</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>367</x>
+     <y>203</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>inputModelButton</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>qSlicerDisplaySSMModuleWidget</receiver>
+   <slot>onSelectInputModel()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>299</x>
+     <y>50</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>155</x>
+     <y>248</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>onSelect()</slot>
+  <slot>onSelectInputModel()</slot>
+ </slots>
 </ui>

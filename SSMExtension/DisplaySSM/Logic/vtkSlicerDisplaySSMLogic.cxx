@@ -22,9 +22,13 @@
 
 // VTK includes
 #include <vtkNew.h>
+#include "vtkMRMLModelNode.h"
+#include "vtkMRMLModelDisplayNode.h"
 
 // STD includes
 #include <cassert>
+
+#include "vtkSlicerModelsLogic.h"
 
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkSlicerDisplaySSMLogic);
@@ -79,3 +83,21 @@ void vtkSlicerDisplaySSMLogic
 {
 }
 
+//---------------------------------------------------------------------------
+void vtkSlicerDisplaySSMLogic::DisplaySampleModel(vtkPolyData* polydata, vtkMRMLScene * mrmlScene)
+{
+  this->SetMRMLScene(mrmlScene);
+  vtkSlicerModelsLogic* modelsLogic = vtkSlicerModelsLogic::New();
+  modelsLogic->SetMRMLScene(mrmlScene);
+  vtkMRMLModelNode* modelNode = modelsLogic->AddModel(polydata);
+  //modelNode->GetDisplayNode()->SetColor(1, 0, 0); 
+  //modelNode->GetDisplayNode()->SetName();
+  if (modelNode == NULL){
+    std::cout<<"empty"<<std::endl;
+  }
+}
+
+void vtkSlicerDisplaySSMLogic::ObserveMRMLScene()
+{
+  this->Superclass::ObserveMRMLScene();
+}

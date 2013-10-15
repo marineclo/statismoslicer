@@ -50,6 +50,9 @@ public:
   virtual QStringList categories()const;
   virtual QStringList dependencies() const;
 
+//public slots:
+  virtual void setMRMLScene(vtkMRMLScene* mrmlScene);
+
 protected:
 
   /// Initialize the module. Register the volumes reader/writer

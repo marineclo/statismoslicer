@@ -37,23 +37,26 @@ if(NOT DEFINED ${proj}_DIR)
 
   ExternalProject_Add(${proj}
     GIT_REPOSITORY "${git_protocol}://github.com/statismo/statismo.git"
-    GIT_TAG "cf536cdc38146535d8af1147dedc7fe5bf3da135"
+    #GIT_TAG "cf536cdc38146535d8af1147dedc7fe5bf3da135"
+    #GIT_TAG "v0.81"
     SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
     BINARY_DIR ${proj}-build
     CMAKE_GENERATOR ${gen}
     CMAKE_ARGS
       -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
-      -DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
+      #-DCMAKE_CXX_FLAGS:STRING=${ep_common_cxx_flags}
       -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
-      -DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
+      #-DCMAKE_C_FLAGS:STRING=${ep_common_c_flags}
       -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
-      -DBUILD_TESTING:BOOL=OFF
+      -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/${proj}-install
+      #-DBUILD_TESTING:BOOL=OFF
       ${EXTERNAL_PROJECT_OPTIONAL_ARGS}
-    INSTALL_COMMAND ""
     DEPENDS
       ${${proj}_DEPENDENCIES}
     )
-  set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
+  #set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
+  #set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-install)
+  set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-install/lib/cmake/statismo-0.81)
 
 else()
   # The project is provided using <proj>_DIR, nevertheless since other project may depend on <proj>,

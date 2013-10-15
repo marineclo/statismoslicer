@@ -64,27 +64,29 @@ qSlicerDisplaySSMModule::~qSlicerDisplaySSMModule()
 //-----------------------------------------------------------------------------
 QString qSlicerDisplaySSMModule::helpText()const
 {
-  return "This is a loadable module bundled in an extension";
+  return "This is a loadable module bundled in an extension to display a SSM";
 }
 
 //-----------------------------------------------------------------------------
 QString qSlicerDisplaySSMModule::acknowledgementText()const
 {
-  return "This work was was partially funded by NIH grant 3P41RR013218-12S1";
+  //return "This work was was partially funded by NIH grant 3P41RR013218-12S1";
+  return "";
 }
 
 //-----------------------------------------------------------------------------
 QStringList qSlicerDisplaySSMModule::contributors()const
 {
   QStringList moduleContributors;
-  moduleContributors << QString("Jean-Christophe Fillion-Robin (Kitware)");
+  moduleContributors << QString("Marine Clogenson (EPFL)");
   return moduleContributors;
 }
 
 //-----------------------------------------------------------------------------
 QIcon qSlicerDisplaySSMModule::icon()const
 {
-  return QIcon(":/Icons/DisplaySSM.png");
+  //return QIcon(":/Icons/DisplaySSM.png");
+  return QIcon("");
 }
 
 //-----------------------------------------------------------------------------
@@ -116,4 +118,9 @@ qSlicerAbstractModuleRepresentation * qSlicerDisplaySSMModule
 vtkMRMLAbstractLogic* qSlicerDisplaySSMModule::createLogic()
 {
   return vtkSlicerDisplaySSMLogic::New();
+}
+
+void qSlicerDisplaySSMModule::setMRMLScene(vtkMRMLScene* mrmlScene)
+{
+  this->Superclass::setMRMLScene(mrmlScene);
 }

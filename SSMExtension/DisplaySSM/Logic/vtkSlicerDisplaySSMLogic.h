@@ -26,6 +26,7 @@
 
 // Slicer includes
 #include "vtkSlicerModuleLogic.h"
+#include "vtkSlicerModelsLogic.h"
 
 // MRML includes
 
@@ -34,6 +35,8 @@
 
 #include "vtkSlicerDisplaySSMModuleLogicExport.h"
 
+// VTK includes
+#include "vtkPolyData.h"
 
 /// \ingroup Slicer_QtModules_ExtensionTemplate
 class VTK_SLICER_DISPLAYSSM_MODULE_LOGIC_EXPORT vtkSlicerDisplaySSMLogic :
@@ -44,11 +47,13 @@ public:
   static vtkSlicerDisplaySSMLogic *New();
   vtkTypeMacro(vtkSlicerDisplaySSMLogic, vtkSlicerModuleLogic);
   void PrintSelf(ostream& os, vtkIndent indent);
+  void DisplaySampleModel(vtkPolyData* polydata, vtkMRMLScene * mrmlScene);
 
 protected:
   vtkSlicerDisplaySSMLogic();
   virtual ~vtkSlicerDisplaySSMLogic();
 
+  virtual void ObserveMRMLScene();
   virtual void SetMRMLSceneInternal(vtkMRMLScene* newScene);
   /// Register MRML Node classes to Scene. Gets called automatically when the MRMLScene is attached to this logic class.
   virtual void RegisterNodes();
