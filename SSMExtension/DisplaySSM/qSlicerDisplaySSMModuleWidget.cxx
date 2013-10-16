@@ -125,7 +125,7 @@ vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(MeshType::Po
   //vtkPoints  *   m_Points = vtkPoints::New();
   vtkSmartPointer< vtkPoints >   m_Points = vtkSmartPointer< vtkPoints >::New();
   vtkSmartPointer< vtkPolyData >   m_PolyData = vtkSmartPointer< vtkPolyData >::New();
-  //vtkPolyData *  m_PolyDataReturn = vtkPolyData::New();
+
   vtkCellArray * m_Polys = vtkCellArray::New();
 
   int numPoints =  meshToConvert->GetNumberOfPoints();
@@ -152,10 +152,8 @@ vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(MeshType::Po
     vpoint[1]= point[1];
     vpoint[2]= point[2];
     m_Points->SetPoint(idx++,vpoint);
-    //idx++;
     points++;
     }
-  //std::cout<<"idx = "<<idx<<std::endl;
 
   m_PolyData->SetPoints(m_Points);
 
@@ -168,7 +166,6 @@ vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(MeshType::Po
     {
   CellType *nextCell = cellIt->Value();
     typename CellType::PointIdIterator pointIt = nextCell->PointIdsBegin();
-    //PointType  p;
     int i;
 
     switch (nextCell->GetType())
@@ -257,7 +254,6 @@ void qSlicerDisplaySSMModuleWidget::onSelectInputModel()
     typename TestType::Pointer meanDf = modelITK->DrawMean();
 
     vtkPolyData* meanModel = vtkPolyData::New();
-    //meanModel->ShallowCopy(d->convertMeshToVtk(meanDf));
     meanModel=d->convertMeshToVtk(meanDf, meanModel);
 
     std::cout<<"test6"<<std::endl;
@@ -318,8 +314,9 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
 
   int nbPrincipalComponent = modelITKw->GetNumberOfPrincipalComponents();
   itkVectorType coefficients(nbPrincipalComponent,0.0); // set the vector to 0
-  int pc = static_cast<int>(d->pcSlider->value())-1; // -1 because user can choose between 1 and max
-  coefficients(pc) = d->stdSlider->value();
+  int pc = d->pcSlider->value()-1; // -1 because user can choose between 1 and max
+  int std = d->stdSlider->value();
+  coefficients(pc) = std;
   //MeshType::Pointer itkSamplePC = d->itkStatModel->DrawSample(coefficients);
   //MeshType::Pointer mesh = d->itkStatModel->DrawSample(coefficients);
  
@@ -332,42 +329,26 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
   std::cout<<"prob = "<<prob<<std::endl;*/
 
   samplePC=d->convertMeshToVtk(itkSamplePC, samplePC);
-  //samplePC->ShallowCopy(d->convertMeshToVtk(itkSamplePC));
 
   // Add polydata sample to the scene
+  vtkNew<vtkMRMLModelDisplayNode> sampleDisplayNode;
+  this->mrmlScene()->AddNode(sampleDisplayNode.GetPointer());
 
   vtkNew<vtkMRMLModelNode> sampleNode;
-  sampleNode->SetScene(this->mrmlScene());
-  sampleNode->SetName("Sample");
   sampleNode->SetAndObservePolyData(samplePC);
+  sampleNode->SetAndObserveDisplayNodeID(sampleDisplayNode->GetID());
 
-  vtkNew<vtkMRMLModelDisplayNode> modelDisplayNode;
-  //modelDisplayNode->SetColor(0,1,0); // green
-  modelDisplayNode->SetScene(this->mrmlScene());
-  this->mrmlScene()->AddNode(modelDisplayNode.GetPointer());
-  sampleNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
+  std::ostringstream ssSample;
+		ssSample <<"SamplePc"<<pc<<"Std"<<std;
+		std::string sampleName = ssSample.str();
 
-  modelDisplayNode->SetInputPolyData(sampleNode->GetPolyData());
+  sampleNode->SetName(sampleName.c_str());
   this->mrmlScene()->AddNode(sampleNode.GetPointer());
 
   samplePC->Delete();
 
   /*vtkSlicerDisplaySSMLogic* moduleLogic = vtkSlicerDisplaySSMLogic::New();
   moduleLogic->DisplaySampleModel(samplePC, this->mrmlScene());*/
-  //vtkMRMLScene* mrmlScene = this->mrmlScene();
- /* vtkMRMLModelNode* sampleNode = vtkMRMLModelNode::New();
-  sampleNode->SetScene(this->mrmlScene());
-  sampleNode->SetName("Sample");
-  sampleNode->SetAndObservePolyData(samplePC);
-  
-  vtkMRMLModelDisplayNode* modelDisplayNode = vtkMRMLModelDisplayNode::New();
-  //modelDisplayNode->SetColor(0,1,0); // green
-  modelDisplayNode->SetScene(this->mrmlScene());
-  this->mrmlScene()->AddNode(modelDisplayNode);
-  sampleNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
-  
-  modelDisplayNode->SetInputPolyData(sampleNode->GetPolyData());
-  this->mrmlScene()->AddNode(sampleNode);*/
   
 }
 
