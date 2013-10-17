@@ -62,6 +62,8 @@
 #include "qSlicerLayoutManager.h"
 #include "qMRMLThreeDView.h"
 
+#include <time.h>
+
 const unsigned Dimensions = 3;
 typedef itk::Mesh<float, Dimensions> MeshType;
 typedef itk::MeshFileReader<MeshType> MeshFileReaderType;
@@ -332,6 +334,14 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
 
   // Add polydata sample to the scene
   vtkNew<vtkMRMLModelDisplayNode> sampleDisplayNode;
+  srand(time(NULL)); // initialisation de rand
+  
+  double r = (rand()/(double)RAND_MAX );
+  double g = (rand()/(double)RAND_MAX );
+  double b = (rand()/(double)RAND_MAX );
+  std::cout<<"r = "<<r<<"g= "<<g<<" b= "<<b<<std::endl;
+  sampleDisplayNode->SetColor(r,g,b); // 
+  //sampleDisplayNode->SetColor(0.5,1,0); // green
   this->mrmlScene()->AddNode(sampleDisplayNode.GetPointer());
 
   vtkNew<vtkMRMLModelNode> sampleNode;
@@ -355,77 +365,70 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
 //-----------------------------------------------------------------------------
 void qSlicerDisplaySSMModuleWidget::displayEigenSpectrum(itkVectorType itkEigenvalue, unsigned int nbPrincipalComponent)
 {
-  //Q_D(qSlicerDisplaySSMModuleWidget);
   std::vector<statismo::ScalarType> eigenvalueVector;
-  //unsigned int nbPrincipalComponent;
+
   double sumEigenvalue = 0;
-  // Get the model name selected by the user
-  //ItkStatisticalModelType* statiModel = ItkStatisticalModelType::New();
-  //statModel = d->getItkStatModel();
-  //itkVectorType itkEigenvalue = statModel->GetPCAVarianceVector(); 
   sumEigenvalue = itkEigenvalue.sum();
   for (unsigned int i=0;i<itkEigenvalue.size();i++){
     eigenvalueVector.push_back(itkEigenvalue(i));
   }
-  //nbPrincipalComponent = statModel->GetNumberOfPrincipalComponents();
 
-  //assert(nbPrincipalComponent==eigenvalueVector.size());
   if (nbPrincipalComponent==eigenvalueVector.size()){
     std::cout<<"ok"<<std::endl;
   }else {
     std::cout<<"pas ok: nb Component = "<<nbPrincipalComponent<<"  size vector="<<eigenvalueVector.size()<<std::endl;
   }
 
-    vtkSmartPointer<vtkCollection> layoutNodes = vtkSmartPointer<vtkCollection>::Take( this->mrmlScene()->GetNodesByClass("vtkMRMLLayoutNode") );
-    layoutNodes->InitTraversal();
-    vtkObject* layoutNodeVtkObject = layoutNodes->GetNextItemAsObject();
-    vtkMRMLLayoutNode* layoutNode = vtkMRMLLayoutNode::SafeDownCast(layoutNodeVtkObject);
-    if (!layoutNode)
-    {
-      std::cout<<"GetChartViewNode: Unable to get layout node!"<<std::endl;
-    }
-    layoutNode->SetViewArrangement( vtkMRMLLayoutNode::SlicerLayoutConventionalQuantitativeView );
-    
-    vtkSmartPointer<vtkCollection> chartViewNodes = vtkSmartPointer<vtkCollection>::Take( this->mrmlScene()->GetNodesByClass("vtkMRMLChartViewNode") );
-    chartViewNodes->InitTraversal();
-    vtkMRMLChartViewNode* chartViewNode = vtkMRMLChartViewNode::SafeDownCast( chartViewNodes->GetNextItemAsObject() );
-    if (!chartViewNode)
-    {
-      std::cout<<"GetChartViewNode: Unable to get chart view node!"<<std::endl;
-    }
+  vtkSmartPointer<vtkCollection> layoutNodes = vtkSmartPointer<vtkCollection>::Take( this->mrmlScene()->GetNodesByClass("vtkMRMLLayoutNode") );
+  layoutNodes->InitTraversal();
+  vtkObject* layoutNodeVtkObject = layoutNodes->GetNextItemAsObject();
+  vtkMRMLLayoutNode* layoutNode = vtkMRMLLayoutNode::SafeDownCast(layoutNodeVtkObject);
+  if (!layoutNode)
+  {
+    std::cout<<"GetChartViewNode: Unable to get layout node!"<<std::endl;
+  }
+  layoutNode->SetViewArrangement( vtkMRMLLayoutNode::SlicerLayoutConventionalQuantitativeView );
+  
+  vtkSmartPointer<vtkCollection> chartViewNodes = vtkSmartPointer<vtkCollection>::Take( this->mrmlScene()->GetNodesByClass("vtkMRMLChartViewNode") );
+  chartViewNodes->InitTraversal();
+  vtkMRMLChartViewNode* chartViewNode = vtkMRMLChartViewNode::SafeDownCast( chartViewNodes->GetNextItemAsObject() );
+  if (!chartViewNode)
+  {
+    std::cout<<"GetChartViewNode: Unable to get chart view node!"<<std::endl;
+  }
 
-    // Create an Array Node and add the eigen value
-    vtkSmartPointer<vtkMRMLDoubleArrayNode> doubleArrayNode = vtkMRMLDoubleArrayNode::SafeDownCast(this->mrmlScene()->AddNode(vtkSmartPointer<vtkMRMLDoubleArrayNode>::New()));
-    vtkDoubleArray* a = doubleArrayNode->GetArray();
-   
-    a->SetNumberOfTuples(nbPrincipalComponent);
-    double cpt = 0;
-    for (unsigned int i = 0;i<nbPrincipalComponent;i++){
-      cpt = cpt + eigenvalueVector[i]*100/sumEigenvalue;
-      a->SetComponent(i, 0, i);
-      a->SetComponent(i, 1, cpt);
-      a->SetComponent(i, 2, 0);
-    }
-    
-    std::cout<<"test"<<std::endl;
-    // Create a Chart Node.
-    vtkNew<vtkMRMLChartNode> chartNode;
-    chartNode->AddArray("EigenSpectrum", doubleArrayNode->GetID());
-    this->mrmlScene()->AddNode(chartNode.GetPointer());
+  // Create an Array Node and add the eigen value
+  vtkSmartPointer<vtkMRMLDoubleArrayNode> doubleArrayNode = vtkMRMLDoubleArrayNode::SafeDownCast(this->mrmlScene()->AddNode(vtkSmartPointer<vtkMRMLDoubleArrayNode>::New()));
+  vtkDoubleArray* a = doubleArrayNode->GetArray();
+ 
+  a->SetNumberOfTuples(nbPrincipalComponent);
+  double cpt = 0;
+  for (unsigned int i = 0;i<nbPrincipalComponent;i++){
+    cpt = cpt + eigenvalueVector[i]*100/sumEigenvalue;
+    a->SetComponent(i, 0, i);
+    a->SetComponent(i, 1, cpt);
+    a->SetComponent(i, 2, 0);
+  }
+  
+  std::cout<<"test"<<std::endl;
+  // Create a Chart Node.
+  vtkNew<vtkMRMLChartNode> chartNode;
+  chartNode->AddArray("EigenSpectrum", doubleArrayNode->GetID());
+  this->mrmlScene()->AddNode(chartNode.GetPointer());
 
-    std::cout<<"test2"<<std::endl;
-    
-    // Set properties on the Chart
-    chartNode->SetProperty("default", "title", "EigenSpectrum");
-    chartNode->SetProperty("default", "xAxisLabel", "Principal components");
-    chartNode->SetProperty("default", "yAxisLabel", "Eigen value");
-    chartNode->SetProperty("default", "type", "Line");
-    chartNode->SetProperty("default", "showMarkers", "on");
-    std::cout<<"test3"<<std::endl;
-    // Tell the Chart View which Chart to display
-    chartViewNode->SetChartNodeID(chartNode->GetID());
+  std::cout<<"test2"<<std::endl;
+  
+  // Set properties on the Chart
+  chartNode->SetProperty("default", "title", "EigenSpectrum");
+  chartNode->SetProperty("default", "xAxisLabel", "Principal components");
+  chartNode->SetProperty("default", "yAxisLabel", "Eigen value");
+  chartNode->SetProperty("default", "type", "Line");
+  chartNode->SetProperty("default", "showMarkers", "on");
+  std::cout<<"test3"<<std::endl;
+  // Tell the Chart View which Chart to display
+  chartViewNode->SetChartNodeID(chartNode->GetID());
 
-    std::cout<<"test4"<<std::endl;
+  std::cout<<"test4"<<std::endl;
 
 }
 
