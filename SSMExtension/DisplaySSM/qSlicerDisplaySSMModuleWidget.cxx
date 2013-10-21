@@ -64,11 +64,11 @@
 
 #include <time.h>
 
-const unsigned Dimensions = 3;
+//const unsigned Dimensions = 3;
 typedef itk::Mesh<float, Dimensions> MeshType;
 typedef itk::MeshFileReader<MeshType> MeshFileReaderType;
-typedef itk::MeshRepresenter<float, Dimensions> ItkRepresenterType;
-typedef itk::StatisticalModel<ItkRepresenterType> ItkStatisticalModelType;
+//typedef itk::MeshRepresenter<float, Dimensions> ItkRepresenterType;
+//typedef itk::StatisticalModel<ItkRepresenterType> ItkStatisticalModelType;
 typedef vnl_vector<statismo::ScalarType> itkVectorType;
 
 //-----------------------------------------------------------------------------
@@ -78,9 +78,9 @@ class qSlicerDisplaySSMModuleWidgetPrivate: public Ui_qSlicerDisplaySSMModuleWid
 public:
   qSlicerDisplaySSMModuleWidgetPrivate();
 
-  ItkStatisticalModelType* itkStatModel;
-  void setItkStatModel(ItkStatisticalModelType* newItkStatModel);
-  ItkStatisticalModelType* getItkStatModel();
+ /* ItkStatisticalModelType::Pointer itkStatModel;
+  void setItkStatModel(ItkStatisticalModelType::Pointer newItkStatModel);
+  ItkStatisticalModelType::Pointer getItkStatModel();*/
   vtkPolyData* convertMeshToVtk(MeshType::Pointer meshToConvert, vtkPolyData *  m_PolyDataReturn);
 
 };
@@ -93,9 +93,9 @@ qSlicerDisplaySSMModuleWidgetPrivate::qSlicerDisplaySSMModuleWidgetPrivate()
 {
 }
 
-void qSlicerDisplaySSMModuleWidgetPrivate::setItkStatModel(ItkStatisticalModelType* newItkStatModel)
+/*void qSlicerDisplaySSMModuleWidgetPrivate::setItkStatModel(ItkStatisticalModelType::Pointer newItkStatModel)
 {
-    if (this->itkStatModel != 0)
+    if (this->itkStatModel.GetPointer() != 0)
     {
         this->itkStatModel->Delete();
         this->itkStatModel = 0;
@@ -106,11 +106,11 @@ void qSlicerDisplaySSMModuleWidgetPrivate::setItkStatModel(ItkStatisticalModelTy
     this->itkStatModel = newItkStatModel;
 }
 
-ItkStatisticalModelType* qSlicerDisplaySSMModuleWidgetPrivate::getItkStatModel()
+ItkStatisticalModelType::Pointer qSlicerDisplaySSMModuleWidgetPrivate::getItkStatModel()
 {
-  ItkStatisticalModelType* newItkStatModel = ItkStatisticalModelType::New();
+  ItkStatisticalModelType::Pointer newItkStatModel = ItkStatisticalModelType::New();
   return newItkStatModel = this->itkStatModel;
-}
+}*/
 
 vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(MeshType::Pointer meshToConvert, vtkPolyData *  m_PolyDataReturn)
 {
@@ -207,11 +207,13 @@ qSlicerDisplaySSMModuleWidget::qSlicerDisplaySSMModuleWidget(QWidget* _parent)
   : Superclass( _parent )
   , d_ptr( new qSlicerDisplaySSMModuleWidgetPrivate )
 {
+    modelITK = ItkStatisticalModelType::New();
 }
 
 //-----------------------------------------------------------------------------
 qSlicerDisplaySSMModuleWidget::~qSlicerDisplaySSMModuleWidget()
 {
+    //delete itkStatModel;
 }
 
 //-----------------------------------------------------------------------------
@@ -237,7 +239,7 @@ void qSlicerDisplaySSMModuleWidget::onSelectInputModel()
   // Load the model
   std::string modelString = inputFile.toStdString();
   try {
-    ItkStatisticalModelType* modelITK = ItkStatisticalModelType::New();
+    //ItkStatisticalModelType* modelITK = ItkStatisticalModelType::New();
     modelITK->Load(modelString.c_str());
     //d->setItkStatModel(modelITK);
     //d->setItkStatModel(d->itkStatModel->Load(modelString.c_str()));
@@ -305,43 +307,31 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
   using std::auto_ptr;
   Q_D(qSlicerDisplaySSMModuleWidget);
   vtkPolyData* samplePC = vtkPolyData::New();
-  // Get the model name selected by the user
-  //d->itkStatModel = d->getItkStatModel();
 
-  QString inputFile = d->modelNamePath->text();
-  // Load the model
-  std::string modelString = inputFile.toStdString();
-  ItkStatisticalModelType* modelITKw = ItkStatisticalModelType::New();
-  modelITKw->Load(modelString.c_str());
-
-  int nbPrincipalComponent = modelITKw->GetNumberOfPrincipalComponents();
+  int nbPrincipalComponent = modelITK->GetNumberOfPrincipalComponents();
   itkVectorType coefficients(nbPrincipalComponent,0.0); // set the vector to 0
   int pc = d->pcSlider->value()-1; // -1 because user can choose between 1 and max
   int std = d->stdSlider->value();
   coefficients(pc) = std;
-  //MeshType::Pointer itkSamplePC = d->itkStatModel->DrawSample(coefficients);
-  //MeshType::Pointer mesh = d->itkStatModel->DrawSample(coefficients);
- 
+
   //Calculate sample
   typedef typename ItkRepresenterType::MeshType TestType;
-  typename TestType::Pointer itkSamplePC = modelITKw->DrawSample(coefficients);
+  typename TestType::Pointer itkSamplePC = modelITK->DrawSample(coefficients);
 
-  //double prob = d->itkStatModel->ComputeProbabilityOfDataset(itkSamplePC);
-  /*double prob = modelITKw->ComputeProbabilityOfDataset(itkSamplePC);
-  std::cout<<"prob = "<<prob<<std::endl;*/
+  //double prob = modelITKw->ComputeProbabilityOfDataset(itkSamplePC);
+  //std::cout<<"prob = "<<prob<<std::endl;
 
   samplePC=d->convertMeshToVtk(itkSamplePC, samplePC);
 
   // Add polydata sample to the scene
   vtkNew<vtkMRMLModelDisplayNode> sampleDisplayNode;
   srand(time(NULL)); // initialisation de rand
-  
+
   double r = (rand()/(double)RAND_MAX );
   double g = (rand()/(double)RAND_MAX );
   double b = (rand()/(double)RAND_MAX );
   std::cout<<"r = "<<r<<"g= "<<g<<" b= "<<b<<std::endl;
-  sampleDisplayNode->SetColor(r,g,b); // 
-  //sampleDisplayNode->SetColor(0.5,1,0); // green
+  sampleDisplayNode->SetColor(r,g,b); //
   this->mrmlScene()->AddNode(sampleDisplayNode.GetPointer());
 
   vtkNew<vtkMRMLModelNode> sampleNode;
@@ -349,8 +339,8 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
   sampleNode->SetAndObserveDisplayNodeID(sampleDisplayNode->GetID());
 
   std::ostringstream ssSample;
-		ssSample <<"SamplePc"<<pc<<"Std"<<std;
-		std::string sampleName = ssSample.str();
+  ssSample <<"SamplePc"<<pc<<"Std"<<std;
+  std::string sampleName = ssSample.str();
 
   sampleNode->SetName(sampleName.c_str());
   this->mrmlScene()->AddNode(sampleNode.GetPointer());
@@ -359,7 +349,6 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
 
   /*vtkSlicerDisplaySSMLogic* moduleLogic = vtkSlicerDisplaySSMLogic::New();
   moduleLogic->DisplaySampleModel(samplePC, this->mrmlScene());*/
-  
 }
 
 //-----------------------------------------------------------------------------

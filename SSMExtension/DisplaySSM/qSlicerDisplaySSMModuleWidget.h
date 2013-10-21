@@ -26,9 +26,9 @@
 #include "itkMeshRepresenter.h"
 #include "statismo_ITK/itkStatisticalModel.h"
 
-//const unsigned Dimensions = 3;
-//typedef itk::MeshRepresenter<float, Dimensions> ItkRepresenterType;
-//typedef itk::StatisticalModel<ItkRepresenterType> ItkStatisticalModelType;
+const unsigned Dimensions = 3;
+typedef itk::MeshRepresenter<float, Dimensions> ItkRepresenterType;
+typedef itk::StatisticalModel<ItkRepresenterType> ItkStatisticalModelType;
 typedef vnl_vector<statismo::ScalarType> itkVectorType;
 
 
@@ -48,6 +48,7 @@ public:
   virtual ~qSlicerDisplaySSMModuleWidget();
   //void displayEigenSpectrum(ItkStatisticalModelType* statModel);
   void displayEigenSpectrum(itkVectorType itkEigenvalue, unsigned int nbPrincipalComponent);
+  ItkStatisticalModelType::Pointer modelITK;
 
 
 public slots:
