@@ -23,9 +23,16 @@
 
 #include "qSlicerDisplaySSMModuleExport.h"
 
+//Statismo includes
 #include "itkMeshRepresenter.h"
 #include "statismo_ITK/itkStatisticalModel.h"
+#include "Representers/VTK/vtkPolyDataRepresenter.h"
 
+// For VTK model
+typedef vtkPolyDataRepresenter VtkRepresenterType;
+typedef statismo::StatisticalModel<VtkRepresenterType> VtkStatisticalModelType;
+
+//Fot ITK model
 const unsigned Dimensions = 3;
 typedef itk::MeshRepresenter<float, Dimensions> ItkRepresenterType;
 typedef itk::StatisticalModel<ItkRepresenterType> ItkStatisticalModelType;
@@ -47,9 +54,9 @@ public:
   qSlicerDisplaySSMModuleWidget(QWidget *parent=0);
   virtual ~qSlicerDisplaySSMModuleWidget();
   //void displayEigenSpectrum(ItkStatisticalModelType* statModel);
-  void displayEigenSpectrum(itkVectorType itkEigenvalue, unsigned int nbPrincipalComponent);
-  ItkStatisticalModelType::Pointer modelITK;
-
+  void displayEigenSpectrum(unsigned int nbPrincipalComponent);
+  ItkStatisticalModelType::Pointer itkModel;
+  VtkStatisticalModelType* vtkModel;
 
 public slots:
   void onSelect();

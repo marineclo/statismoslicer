@@ -78,9 +78,6 @@ class qSlicerDisplaySSMModuleWidgetPrivate: public Ui_qSlicerDisplaySSMModuleWid
 public:
   qSlicerDisplaySSMModuleWidgetPrivate();
 
- /* ItkStatisticalModelType::Pointer itkStatModel;
-  void setItkStatModel(ItkStatisticalModelType::Pointer newItkStatModel);
-  ItkStatisticalModelType::Pointer getItkStatModel();*/
   vtkPolyData* convertMeshToVtk(MeshType::Pointer meshToConvert, vtkPolyData *  m_PolyDataReturn);
 
 };
@@ -92,25 +89,6 @@ public:
 qSlicerDisplaySSMModuleWidgetPrivate::qSlicerDisplaySSMModuleWidgetPrivate()
 {
 }
-
-/*void qSlicerDisplaySSMModuleWidgetPrivate::setItkStatModel(ItkStatisticalModelType::Pointer newItkStatModel)
-{
-    if (this->itkStatModel.GetPointer() != 0)
-    {
-        this->itkStatModel->Delete();
-        this->itkStatModel = 0;
-        std::cout<<"itkStatModel not 0"<<std::endl;
-
-    }
-    this->itkStatModel = ItkStatisticalModelType::New();
-    this->itkStatModel = newItkStatModel;
-}
-
-ItkStatisticalModelType::Pointer qSlicerDisplaySSMModuleWidgetPrivate::getItkStatModel()
-{
-  ItkStatisticalModelType::Pointer newItkStatModel = ItkStatisticalModelType::New();
-  return newItkStatModel = this->itkStatModel;
-}*/
 
 vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(MeshType::Pointer meshToConvert, vtkPolyData *  m_PolyDataReturn)
 {
@@ -138,24 +116,23 @@ vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(MeshType::Po
   PointType point;
 
   if (numPoints == 0)
-    {
-      printf( "Aborting: No Points in GRID\n");
-      
-    }
+  {
+    printf( "Aborting: No Points in GRID\n");
+  }
 
   m_Points->SetNumberOfPoints(numPoints);
   
   int idx=0;
   float vpoint[3];
   while( points != myPoints->End() )
-    {
+  {
     point = points.Value();
     vpoint[0]= point[0];
     vpoint[1]= point[1];
     vpoint[2]= point[2];
     m_Points->SetPoint(idx++,vpoint);
     points++;
-    }
+  }
 
   m_PolyData->SetPoints(m_Points);
 
@@ -165,13 +142,13 @@ vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(MeshType::Po
   CellsContainerIterator cellIt = cells->Begin();
   vtkIdType pts[3];
   while ( cellIt != cells->End() )
-    {
-  CellType *nextCell = cellIt->Value();
+  {
+    CellType *nextCell = cellIt->Value();
     typename CellType::PointIdIterator pointIt = nextCell->PointIdsBegin();
     int i;
 
     switch (nextCell->GetType())
-      {
+    {
       case CellType::VERTEX_CELL:
       case CellType::LINE_CELL:
       case CellType::POLYGON_CELL:
@@ -180,16 +157,16 @@ vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(MeshType::Po
         i=0;
         while (pointIt != nextCell->PointIdsEnd() )
         {
-        pts[i++] = *pointIt++;
+          pts[i++] = *pointIt++;
         }
         m_Polys->InsertNextCell(3,pts);
         break;
       default:
         printf("something \n");
-      }
+    }
     cellIt++;
 
-    }
+  }
 
   m_PolyData->SetPolys(m_Polys);
   m_Polys->Delete();
@@ -207,13 +184,15 @@ qSlicerDisplaySSMModuleWidget::qSlicerDisplaySSMModuleWidget(QWidget* _parent)
   : Superclass( _parent )
   , d_ptr( new qSlicerDisplaySSMModuleWidgetPrivate )
 {
-    modelITK = ItkStatisticalModelType::New();
+  itkModel = ItkStatisticalModelType::New();
+  //vtkModel = 0;
 }
 
 //-----------------------------------------------------------------------------
 qSlicerDisplaySSMModuleWidget::~qSlicerDisplaySSMModuleWidget()
 {
     //delete itkStatModel;
+  delete vtkModel;
 }
 
 //-----------------------------------------------------------------------------
@@ -234,70 +213,81 @@ void qSlicerDisplaySSMModuleWidget::setMRMLScene(vtkMRMLScene* mrmlScene)
 void qSlicerDisplaySSMModuleWidget::onSelectInputModel()
 {
   Q_D(qSlicerDisplaySSMModuleWidget);
+  vtkPolyData* meanModel = vtkPolyData::New();
+  unsigned int nbPrincipalComponent = 0;
   QString inputFile = QFileDialog::getOpenFileName(this, "Select input model", QString());
   d->modelNamePath->setText(inputFile);
   // Load the model
   std::string modelString = inputFile.toStdString();
-  try {
-    //ItkStatisticalModelType* modelITK = ItkStatisticalModelType::New();
-    modelITK->Load(modelString.c_str());
-    //d->setItkStatModel(modelITK);
-    //d->setItkStatModel(d->itkStatModel->Load(modelString.c_str()));
-
-    // Display Eigen spectrum
-    itkVectorType itkEigenvalue = modelITK->GetPCAVarianceVector(); 
-    unsigned int nbPrincipalComponent = modelITK->GetNumberOfPrincipalComponents();
-
-    // Set the number of components for the pcSlider
-    //d->pcSlider->setMaximum(d->itkStatModel->GetNumberOfPrincipalComponents());
-    d->pcSlider->setMaximum(nbPrincipalComponent);
-     std::cout<<"test5"<<std::endl;
-    
-    //Calculate mean
-    typedef typename ItkRepresenterType::MeshType TestType;
-    typename TestType::Pointer meanDf = modelITK->DrawMean();
-
-    vtkPolyData* meanModel = vtkPolyData::New();
-    meanModel=d->convertMeshToVtk(meanDf, meanModel);
-
-    std::cout<<"test6"<<std::endl;
-    // Add mean model to the scene
-    /*vtkSlicerDisplaySSMLogic* moduleLogic = vtkSlicerDisplaySSMLogic::New();
-    moduleLogic->DisplaySampleModel(meanModel, this->mrmlScene());*/
-
-    std::cout<<"test7"<<std::endl;
-
-    vtkNew<vtkMRMLModelDisplayNode> modelDisplayNode;
-    this->mrmlScene()->AddNode(modelDisplayNode.GetPointer());
-
-    vtkNew<vtkMRMLModelNode> meanNode;
-    meanNode->SetAndObservePolyData(meanModel);
-    meanNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
-    meanNode->SetName("Mean");
-    this->mrmlScene()->AddNode(meanNode.GetPointer());
-
-    /*qSlicerApplication * app = qSlicerApplication::application();
-    if (!app)
-    {
-      std::cout<<"error application"<<std::endl;
+  bool radioVTK = true;
+  if (radioVTK ==true){
+    try {
+      vtkModel = VtkStatisticalModelType::Load(modelString.c_str());
+      meanModel = vtkModel->DrawMean();
+      nbPrincipalComponent = vtkModel->GetNumberOfPrincipalComponents();
     }
-    qSlicerLayoutManager * layoutManager = app->layoutManager();
-    if (!layoutManager)
-    {
-      std::cout<<"error layout"<<std::endl;
+    catch (StatisticalModelException& e) {
+      std::cout << "Exception occured while building the shape model" << std::endl;
+      std::cout << e.what() << std::endl;
     }
-    qMRMLThreeDView* threeDView = layoutManager->threeDWidget(0)->threeDView();
-    threeDView->resetFocalPoint();*/
-    
-    meanModel->Delete();
-
-    displayEigenSpectrum(itkEigenvalue, nbPrincipalComponent);
-
   }
- catch (itk::ExceptionObject& o) {
-  std::cout << "Exception occured while building the shape model" << std::endl;
-  std::cout << o << std::endl;
- }
+  if (radioVTK == false){
+    try {
+      itkModel->Load(modelString.c_str());
+      nbPrincipalComponent = itkModel->GetNumberOfPrincipalComponents();
+
+      //Calculate mean
+      typedef typename ItkRepresenterType::MeshType TestType;
+      typename TestType::Pointer meanDf = itkModel->DrawMean();
+
+      meanModel=d->convertMeshToVtk(meanDf, meanModel);
+
+      std::cout<<"test6"<<std::endl;
+
+    }
+    catch (itk::ExceptionObject& o) {
+      std::cout << "Exception occured while building the shape model" << std::endl;
+      std::cout << o << std::endl;
+    }
+  }
+
+  // Add mean model to the scene
+  /*vtkSlicerDisplaySSMLogic* moduleLogic = vtkSlicerDisplaySSMLogic::New();
+  moduleLogic->DisplaySampleModel(meanModel, this->mrmlScene());*/
+
+  std::cout<<"test7"<<std::endl;
+
+  vtkNew<vtkMRMLModelDisplayNode> modelDisplayNode;
+  this->mrmlScene()->AddNode(modelDisplayNode.GetPointer());
+
+  vtkNew<vtkMRMLModelNode> meanNode;
+  meanNode->SetAndObservePolyData(meanModel);
+  meanNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
+  meanNode->SetName("Mean");
+  this->mrmlScene()->AddNode(meanNode.GetPointer());
+
+  /*qSlicerApplication * app = qSlicerApplication::application();
+  if (!app)
+  {
+    std::cout<<"error application"<<std::endl;
+  }
+  qSlicerLayoutManager * layoutManager = app->layoutManager();
+  if (!layoutManager)
+  {
+    std::cout<<"error layout"<<std::endl;
+  }
+  qMRMLThreeDView* threeDView = layoutManager->threeDWidget(0)->threeDView();
+  threeDView->resetFocalPoint();*/
+
+  meanModel->Delete();
+
+   // Display Eigen spectrum
+  //displayEigenSpectrum(nbPrincipalComponent);
+
+  // Set the number of components for the pcSlider
+  d->pcSlider->setMaximum(nbPrincipalComponent);
+  std::cout<<"test5"<<std::endl;
+
 }
 
 //-----------------------------------------------------------------------------
@@ -308,7 +298,7 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
   Q_D(qSlicerDisplaySSMModuleWidget);
   vtkPolyData* samplePC = vtkPolyData::New();
 
-  int nbPrincipalComponent = modelITK->GetNumberOfPrincipalComponents();
+  int nbPrincipalComponent = itkModel->GetNumberOfPrincipalComponents();
   itkVectorType coefficients(nbPrincipalComponent,0.0); // set the vector to 0
   int pc = d->pcSlider->value()-1; // -1 because user can choose between 1 and max
   int std = d->stdSlider->value();
@@ -316,10 +306,10 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
 
   //Calculate sample
   typedef typename ItkRepresenterType::MeshType TestType;
-  typename TestType::Pointer itkSamplePC = modelITK->DrawSample(coefficients);
+  typename TestType::Pointer itkSamplePC = itkModel->DrawSample(coefficients);
 
-  //double prob = modelITKw->ComputeProbabilityOfDataset(itkSamplePC);
-  //std::cout<<"prob = "<<prob<<std::endl;
+  /*double prob = itkModel->ComputeProbabilityOfDataset(itkSamplePC);
+  std::cout<<"prob = "<<prob<<std::endl;*/
 
   samplePC=d->convertMeshToVtk(itkSamplePC, samplePC);
 
@@ -327,17 +317,17 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
   vtkNew<vtkMRMLModelDisplayNode> sampleDisplayNode;
   srand(time(NULL)); // initialisation de rand
 
-  double r = (rand()/(double)RAND_MAX );
+  double r = (rand()/(double)RAND_MAX ); //random color between 0 and 1
   double g = (rand()/(double)RAND_MAX );
   double b = (rand()/(double)RAND_MAX );
-  std::cout<<"r = "<<r<<"g= "<<g<<" b= "<<b<<std::endl;
-  sampleDisplayNode->SetColor(r,g,b); //
+  sampleDisplayNode->SetColor(r,g,b); // random color
   this->mrmlScene()->AddNode(sampleDisplayNode.GetPointer());
 
   vtkNew<vtkMRMLModelNode> sampleNode;
   sampleNode->SetAndObservePolyData(samplePC);
   sampleNode->SetAndObserveDisplayNodeID(sampleDisplayNode->GetID());
 
+  //display Sample name with PC and Std values
   std::ostringstream ssSample;
   ssSample <<"SamplePc"<<pc<<"Std"<<std;
   std::string sampleName = ssSample.str();
@@ -352,10 +342,10 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
 }
 
 //-----------------------------------------------------------------------------
-void qSlicerDisplaySSMModuleWidget::displayEigenSpectrum(itkVectorType itkEigenvalue, unsigned int nbPrincipalComponent)
+void qSlicerDisplaySSMModuleWidget::displayEigenSpectrum(unsigned int nbPrincipalComponent)
 {
   std::vector<statismo::ScalarType> eigenvalueVector;
-
+  itkVectorType itkEigenvalue = itkModel->GetPCAVarianceVector();
   double sumEigenvalue = 0;
   sumEigenvalue = itkEigenvalue.sum();
   for (unsigned int i=0;i<itkEigenvalue.size();i++){
