@@ -15,76 +15,109 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="ctkCollapsibleButton" name="CTKCollapsibleButton">
-     <property name="text">
+    <widget class="ctkCollapsibleButton" name="CTKCollapsibleButton" native="true">
+     <property name="text" stdset="0">
       <string>Parameters</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <property name="margin">
        <number>0</number>
       </property>
-      <item row="0" column="0">
+      <item row="2" column="0">
        <widget class="QLabel" name="inputModel">
         <property name="text">
          <string>Input Model</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
+      <item row="5" column="0">
        <widget class="QLabel" name="PC">
         <property name="text">
          <string>Principal Component</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="3">
-       <widget class="ctkSliderWidget" name="pcSlider">
-        <property name="decimals">
+      <item row="5" column="3">
+       <widget class="ctkSliderWidget" name="pcSlider" native="true">
+        <property name="decimals" stdset="0">
          <number>0</number>
         </property>
-        <property name="minimum">
+        <property name="minimum" stdset="0">
          <double>1.000000000000000</double>
         </property>
-        <property name="maximum">
+        <property name="maximum" stdset="0">
          <double>10.000000000000000</double>
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
+      <item row="6" column="0">
        <widget class="QLabel" name="std">
         <property name="text">
          <string>Standard deviation</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="3">
+      <item row="2" column="1" colspan="3">
        <widget class="QPushButton" name="inputModelButton">
         <property name="text">
          <string>Open Model</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="3">
-       <widget class="QLineEdit" name="modelNamePath"/>
-      </item>
-      <item row="1" column="0">
+      <item row="4" column="0">
        <widget class="QLabel" name="modelName">
         <property name="text">
          <string>Model Name</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="3">
-       <widget class="ctkSliderWidget" name="stdSlider">
-        <property name="decimals">
+      <item row="6" column="3">
+       <widget class="ctkSliderWidget" name="stdSlider" native="true">
+        <property name="decimals" stdset="0">
          <number>0</number>
         </property>
-        <property name="minimum">
+        <property name="minimum" stdset="0">
          <double>-10.000000000000000</double>
         </property>
-        <property name="maximum">
+        <property name="maximum" stdset="0">
          <double>10.000000000000000</double>
         </property>
+       </widget>
+      </item>
+      <item row="4" column="1" colspan="3">
+       <widget class="QLineEdit" name="modelNamePath"/>
+      </item>
+      <item row="1" column="0" colspan="4">
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>GroupBox</string>
+        </property>
+        <widget class="QRadioButton" name="radioButtonITK">
+         <property name="geometry">
+          <rect>
+           <x>190</x>
+           <y>0</y>
+           <width>116</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>ITK Model</string>
+         </property>
+        </widget>
+        <widget class="QRadioButton" name="radioButtonVTK">
+         <property name="geometry">
+          <rect>
+           <x>360</x>
+           <y>0</y>
+           <width>116</width>
+           <height>22</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>VTK Model</string>
+         </property>
+        </widget>
        </widget>
       </item>
      </layout>

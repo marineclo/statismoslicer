@@ -31,6 +31,7 @@
 // For VTK model
 typedef vtkPolyDataRepresenter VtkRepresenterType;
 typedef statismo::StatisticalModel<VtkRepresenterType> VtkStatisticalModelType;
+using std::auto_ptr;
 
 //Fot ITK model
 const unsigned Dimensions = 3;
@@ -56,6 +57,7 @@ public:
   //void displayEigenSpectrum(ItkStatisticalModelType* statModel);
   void displayEigenSpectrum(unsigned int nbPrincipalComponent);
   ItkStatisticalModelType::Pointer itkModel;
+  //auto_ptr<VtkStatisticalModelType> vtkModel;
   VtkStatisticalModelType* vtkModel;
 
 public slots:

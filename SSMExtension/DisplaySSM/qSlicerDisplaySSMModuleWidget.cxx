@@ -185,14 +185,13 @@ qSlicerDisplaySSMModuleWidget::qSlicerDisplaySSMModuleWidget(QWidget* _parent)
   , d_ptr( new qSlicerDisplaySSMModuleWidgetPrivate )
 {
   itkModel = ItkStatisticalModelType::New();
-  //vtkModel = 0;
+  //vtkModel(new VtkStatisticalModelType);
 }
 
 //-----------------------------------------------------------------------------
 qSlicerDisplaySSMModuleWidget::~qSlicerDisplaySSMModuleWidget()
 {
-    //delete itkStatModel;
-  delete vtkModel;
+  vtkModel->Delete();
 }
 
 //-----------------------------------------------------------------------------
@@ -219,9 +218,11 @@ void qSlicerDisplaySSMModuleWidget::onSelectInputModel()
   d->modelNamePath->setText(inputFile);
   // Load the model
   std::string modelString = inputFile.toStdString();
-  bool radioVTK = true;
-  if (radioVTK ==true){
+
+  if (d->radioButtonVTK->isChecked()){
     try {
+      //vtkModel(new VtkStatisticalModelType::Load(modelString.c_str()));
+      //vtkModel->Load(modelString.c_str());
       vtkModel = VtkStatisticalModelType::Load(modelString.c_str());
       meanModel = vtkModel->DrawMean();
       nbPrincipalComponent = vtkModel->GetNumberOfPrincipalComponents();
@@ -230,8 +231,9 @@ void qSlicerDisplaySSMModuleWidget::onSelectInputModel()
       std::cout << "Exception occured while building the shape model" << std::endl;
       std::cout << e.what() << std::endl;
     }
+
   }
-  if (radioVTK == false){
+  if (d->radioButtonITK->isChecked()){
     try {
       itkModel->Load(modelString.c_str());
       nbPrincipalComponent = itkModel->GetNumberOfPrincipalComponents();
@@ -282,7 +284,7 @@ void qSlicerDisplaySSMModuleWidget::onSelectInputModel()
   meanModel->Delete();
 
    // Display Eigen spectrum
-  //displayEigenSpectrum(nbPrincipalComponent);
+  displayEigenSpectrum(nbPrincipalComponent);
 
   // Set the number of components for the pcSlider
   d->pcSlider->setMaximum(nbPrincipalComponent);
@@ -298,20 +300,31 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
   Q_D(qSlicerDisplaySSMModuleWidget);
   vtkPolyData* samplePC = vtkPolyData::New();
 
-  int nbPrincipalComponent = itkModel->GetNumberOfPrincipalComponents();
-  itkVectorType coefficients(nbPrincipalComponent,0.0); // set the vector to 0
   int pc = d->pcSlider->value()-1; // -1 because user can choose between 1 and max
   int std = d->stdSlider->value();
-  coefficients(pc) = std;
 
-  //Calculate sample
-  typedef typename ItkRepresenterType::MeshType TestType;
-  typename TestType::Pointer itkSamplePC = itkModel->DrawSample(coefficients);
+  if (d->radioButtonVTK->isChecked()){
+    int nbPrincipalComponent = vtkModel->GetNumberOfPrincipalComponents();
+    VectorType coefficients = VectorType::Zero(nbPrincipalComponent);
+    coefficients(pc) = std;
+    samplePC = vtkModel->DrawSample(coefficients);
+    /*double prob = vtkModel->ComputeProbabilityOfDataset(samplePC);
+    std::cout<<"prob = "<<prob<<std::endl;*/
+  }
+  if (d->radioButtonITK->isChecked()){
+    int nbPrincipalComponent = itkModel->GetNumberOfPrincipalComponents();
+    itkVectorType coefficients(nbPrincipalComponent,0.0); // set the vector to 0
+     coefficients(pc) = std;
 
-  /*double prob = itkModel->ComputeProbabilityOfDataset(itkSamplePC);
-  std::cout<<"prob = "<<prob<<std::endl;*/
+    //Calculate sample
+    typedef typename ItkRepresenterType::MeshType TestType;
+    typename TestType::Pointer itkSamplePC = itkModel->DrawSample(coefficients);
 
-  samplePC=d->convertMeshToVtk(itkSamplePC, samplePC);
+    /*double prob = itkModel->ComputeProbabilityOfDataset(itkSamplePC);
+    std::cout<<"prob = "<<prob<<std::endl;*/
+
+    samplePC=d->convertMeshToVtk(itkSamplePC, samplePC);
+  }
 
   // Add polydata sample to the scene
   vtkNew<vtkMRMLModelDisplayNode> sampleDisplayNode;
@@ -344,13 +357,25 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
 //-----------------------------------------------------------------------------
 void qSlicerDisplaySSMModuleWidget::displayEigenSpectrum(unsigned int nbPrincipalComponent)
 {
+  Q_D(qSlicerDisplaySSMModuleWidget);
   std::vector<statismo::ScalarType> eigenvalueVector;
-  itkVectorType itkEigenvalue = itkModel->GetPCAVarianceVector();
   double sumEigenvalue = 0;
-  sumEigenvalue = itkEigenvalue.sum();
-  for (unsigned int i=0;i<itkEigenvalue.size();i++){
-    eigenvalueVector.push_back(itkEigenvalue(i));
+
+  if (d->radioButtonVTK->isChecked()){
+    VectorType eigenvalue = vtkModel->GetPCAVarianceVector();
+    sumEigenvalue = eigenvalue.sum();
+    for (unsigned int i=0;i<eigenvalue.rows();i++){
+      eigenvalueVector.push_back(eigenvalue[i]);
+    }
   }
+  if (d->radioButtonITK->isChecked()){
+    itkVectorType itkEigenvalue = itkModel->GetPCAVarianceVector();
+    sumEigenvalue = itkEigenvalue.sum();
+    for (unsigned int i=0;i<itkEigenvalue.size();i++){
+      eigenvalueVector.push_back(itkEigenvalue(i));
+    }
+  }
+
 
   if (nbPrincipalComponent==eigenvalueVector.size()){
     std::cout<<"ok"<<std::endl;
