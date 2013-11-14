@@ -43,6 +43,11 @@
 #include "itkObject.h"
 #include <vtkSmartPointer.h>
 
+//Add to convert vtkPolyData to vtkImageData
+#include <vtkImageData.h>
+#include <vtkPolyDataToImageStencil.h>
+#include <vtkImageStencil.h>
+#include <vtkPointData.h>
 
 // DisplaySSM Logic includes
 #include "vtkSlicerDisplaySSMLogic.h"
@@ -56,6 +61,10 @@
 #include <vtkDoubleArray.h>
 #include "vtkMRMLChartViewNode.h"
 #include "vtkMRMLChartNode.h"
+
+#include "vtkMRMLScalarVolumeNode.h"
+#include "vtkMRMLScalarVolumeDisplayNode.h"
+#include "vtkMRMLLabelMapVolumeDisplayNode.h"
 
 //
 #include "qSlicerApplication.h"
@@ -79,6 +88,8 @@ public:
   qSlicerDisplaySSMModuleWidgetPrivate();
 
   vtkPolyData* convertMeshToVtk(MeshType::Pointer meshToConvert, vtkPolyData *  m_PolyDataReturn);
+
+  vtkImageData* convertPolyDataToImageData(vtkSmartPointer<vtkPolyData> inpuPolyData, vtkImageData* meanImageReturn,  double *origin, double spacing[]);
 
 };
 
@@ -176,6 +187,76 @@ vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(MeshType::Po
   return m_PolyDataReturn;
 }
 
+vtkImageData* qSlicerDisplaySSMModuleWidgetPrivate::convertPolyDataToImageData(vtkSmartPointer< vtkPolyData > inpuPolyData, vtkImageData* meanImageReturn, double *origin, double spacing[]){
+
+  vtkSmartPointer< vtkImageData >   whiteImage = vtkSmartPointer< vtkImageData >::New();
+  double bounds[6];
+  inpuPolyData->GetBounds(bounds);
+
+  whiteImage->SetSpacing(spacing);
+
+  // compute dimensions
+  int dim[3];
+  for (int i = 0; i < 3; i++)
+    {
+    std::cout<<"bounds"<<i<<"="<<bounds[i]<<"bounds"<<i+3<<"="<<bounds[i+3]<<std::endl;
+    dim[i] = static_cast<int>(ceil((bounds[i * 2 + 1] - bounds[i * 2]) / spacing[i]));
+    }
+
+  whiteImage->SetDimensions(dim);
+  whiteImage->SetExtent(0, dim[0] - 1, 0, dim[1] - 1, 0, dim[2] - 1);
+
+  //double origin[3];
+  origin[0] = bounds[0] + spacing[0] / 2;
+  origin[1] = bounds[2] + spacing[1] / 2;
+  origin[2] = bounds[4] + spacing[2] / 2;
+  /*originVector.push_back(origin[0]);
+  originVector.push_back(origin[1]);
+  originVector.push_back(origin[2]);*/
+  std::cout<<"origin[0]= " <<origin[0]<<std::endl;
+  std::cout<<"origin[1]= " <<origin[1]<<std::endl;
+  std::cout<<"origin[2]= " <<origin[2]<<std::endl;
+  whiteImage->SetOrigin(origin);
+
+  whiteImage->SetScalarTypeToUnsignedChar();
+  whiteImage->AllocateScalars();
+
+  // fill the image with foreground voxels:
+  unsigned char inval = 255;
+  unsigned char outval = 0;
+  vtkIdType count = whiteImage->GetNumberOfPoints();
+  for (vtkIdType i = 0; i < count; ++i)
+  {
+    whiteImage->GetPointData()->GetScalars()->SetTuple1(i, inval);
+  }
+
+  // polygonal data --> image stencil:
+  vtkSmartPointer< vtkPolyDataToImageStencil > pol2stenc = vtkSmartPointer< vtkPolyDataToImageStencil >::New();
+
+  pol2stenc->SetInput(inpuPolyData);
+
+  pol2stenc->SetOutputOrigin(origin);
+  pol2stenc->SetOutputSpacing(spacing);
+  pol2stenc->SetOutputWholeExtent(whiteImage->GetExtent());
+  pol2stenc->Update();
+
+  // cut the corresponding white image and set the background:
+  vtkSmartPointer< vtkImageStencil > imgstenc = vtkSmartPointer< vtkImageStencil >::New();
+
+  imgstenc->SetInput(whiteImage);
+  imgstenc->SetStencil(pol2stenc->GetOutput());
+
+  imgstenc->ReverseStencilOff();
+  imgstenc->SetBackgroundValue(outval);
+  imgstenc->Update();
+
+  meanImageReturn->ShallowCopy(imgstenc->GetOutput());
+
+  return meanImageReturn;
+}
+
+
+
 //-----------------------------------------------------------------------------
 // qSlicerDisplaySSMModuleWidget methods
 
@@ -267,6 +348,31 @@ void qSlicerDisplaySSMModuleWidget::onSelectInputModel()
   meanNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
   meanNode->SetName("Mean");
   this->mrmlScene()->AddNode(meanNode.GetPointer());
+
+  double spacing[3]; // desired volume spacing
+  spacing[0] = 0.24;
+  spacing[1] = 0.24;
+  spacing[2] = 0.6;
+
+  //std::vector<double> originVector(3);
+  double origin[3];
+  vtkImageData* meanImage = vtkImageData::New();
+  meanImage = d->convertPolyDataToImageData(meanModel, meanImage, &origin[0], spacing);
+  std::cout<<"test5="<<origin[0]<<" "<<origin[1]<<" "<<origin[2]<<std::endl;
+
+  vtkNew<vtkMRMLScalarVolumeNode> volumeNode;
+  //vtkNew<vtkMRMLLabelMapVolumeDisplayNode> volumeNode;
+  volumeNode->SetAndObserveImageData(meanImage);
+  volumeNode->SetOrigin(-origin[0], -origin[1], origin[2]); //Compensate Slicer coordinates
+  volumeNode->SetSpacing(spacing);
+  volumeNode->SetLabelMap(true);
+  this->mrmlScene()->AddNode( volumeNode.GetPointer() );
+
+  //vtkNew<vtkMRMLScalarVolumeDisplayNode> volumeDisplayNode;
+  vtkNew<vtkMRMLLabelMapVolumeDisplayNode> volumeDisplayNode;
+  this->mrmlScene()->AddNode( volumeDisplayNode.GetPointer() );
+  //volumeNode->SetAndObserveDisplayNodeID(volumeDisplayNode->GetID());
+  volumeNode->SetAndObserveDisplayNodeID(volumeDisplayNode->GetID());
 
   /*qSlicerApplication * app = qSlicerApplication::application();
   if (!app)
