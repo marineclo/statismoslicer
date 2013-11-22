@@ -432,6 +432,7 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
   //volumeNode->SetOrigin(14,36,bounds[4]); //Compensate Slicer coordinates
   volumeNode->SetSpacing(spacing);
   volumeNode->SetLabelMap(true);
+  //volumeNode->SetCenter(true);
   this->mrmlScene()->AddNode(volumeNode.GetPointer());
 
   // finally display the volume in the slice node
