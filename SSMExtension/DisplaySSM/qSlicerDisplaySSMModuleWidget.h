@@ -63,6 +63,7 @@ public:
 public slots:
   void onSelect();
   void onSelectInputModel();
+  void applyModel();
 
 protected:
   QScopedPointer<qSlicerDisplaySSMModuleWidgetPrivate> d_ptr;

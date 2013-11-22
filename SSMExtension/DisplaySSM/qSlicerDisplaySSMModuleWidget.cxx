@@ -110,15 +110,15 @@ qSlicerDisplaySSMModuleWidgetPrivate::qSlicerDisplaySSMModuleWidgetPrivate()
 
 vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(MeshType::Pointer meshToConvert, vtkPolyData *  m_PolyDataReturn)
 {
-  typedef typename MeshType::MeshTraits                      TriangleMeshTraits;
-  typedef typename MeshType::PointType                       PointType;
-  typedef typename MeshType::PointsContainer                 InputPointsContainer;
-  typedef typename InputPointsContainer::Pointer             InputPointsContainerPointer;
-  typedef typename InputPointsContainer::Iterator            InputPointsContainerIterator;
-  typedef typename MeshType::CellType                        CellType;
+  typedef MeshType::MeshTraits                      TriangleMeshTraits;
+  typedef MeshType::PointType                       PointType;
+  typedef MeshType::PointsContainer                 InputPointsContainer;
+  typedef InputPointsContainer::Pointer             InputPointsContainerPointer;
+  typedef InputPointsContainer::Iterator            InputPointsContainerIterator;
+  typedef MeshType::CellType                        CellType;
 
-  typedef typename MeshType::CellsContainerPointer           CellsContainerPointer;
-  typedef typename MeshType::CellsContainerIterator          CellsContainerIterator;
+  typedef MeshType::CellsContainerPointer           CellsContainerPointer;
+  typedef MeshType::CellsContainerIterator          CellsContainerIterator;
 
   //vtkPoints  *   m_Points = vtkPoints::New();
   vtkSmartPointer< vtkPoints >   m_Points = vtkSmartPointer< vtkPoints >::New();
@@ -162,7 +162,7 @@ vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(MeshType::Po
   while ( cellIt != cells->End() )
   {
     CellType *nextCell = cellIt->Value();
-    typename CellType::PointIdIterator pointIt = nextCell->PointIdsBegin();
+    CellType::PointIdIterator pointIt = nextCell->PointIdsBegin();
     int i;
 
     switch (nextCell->GetType())
@@ -301,12 +301,20 @@ void qSlicerDisplaySSMModuleWidget::setMRMLScene(vtkMRMLScene* mrmlScene)
 void qSlicerDisplaySSMModuleWidget::onSelectInputModel()
 {
   Q_D(qSlicerDisplaySSMModuleWidget);
-  vtkPolyData* meanModel = vtkPolyData::New();
-  unsigned int nbPrincipalComponent = 0;
+  //vtkPolyData* meanModel = vtkPolyData::New();
+  //unsigned int nbPrincipalComponent = 0;
   QString inputFile = QFileDialog::getOpenFileName(this, "Select input model", QString());
   d->modelNamePath->setText(inputFile);
+}
+
+void qSlicerDisplaySSMModuleWidget::applyModel()
+{
+  Q_D(qSlicerDisplaySSMModuleWidget);
+  vtkPolyData* meanModel = vtkPolyData::New();
+  unsigned int nbPrincipalComponent = 0;
   // Load the model
-  std::string modelString = inputFile.toStdString();
+  //std::string modelString = inputFile.toStdString();
+  std::string modelString = d->modelNamePath->text().toStdString();
 
   if (d->radioButtonVTK->isChecked()){
     try {
@@ -329,8 +337,8 @@ void qSlicerDisplaySSMModuleWidget::onSelectInputModel()
       nbPrincipalComponent = itkModel->GetNumberOfPrincipalComponents();
 
       //Calculate mean
-      typedef typename ItkRepresenterType::MeshType TestType;
-      typename TestType::Pointer meanDf = itkModel->DrawMean();
+      typedef ItkRepresenterType::MeshType TestType;
+      TestType::Pointer meanDf = itkModel->DrawMean();
 
       meanModel=d->convertMeshToVtk(meanDf, meanModel);
 
@@ -377,7 +385,8 @@ void qSlicerDisplaySSMModuleWidget::onSelectInputModel()
   std::cout<<"test5="<<origin[0]<<" "<<origin[1]<<" "<<origin[2]<<std::endl;
 
   vtkMetaImageWriter* writer = vtkMetaImageWriter::New();
-  writer->SetFileName("/home/marine/Documents/SSM/Tools/PolyDataToImageData/meanVolume.mhd");
+  //writer->SetFileName("/home/marine/Documents/SSM/Tools/PolyDataToImageData/meanVolume.mhd");
+  writer->SetFileName("/Users/Marine/EPFL/Documents/Tools/ssmtool/PolyDataToImageData/meanVolume.mhd");
   writer->SetInput(meanImage);
   writer->Write();
 
@@ -402,6 +411,11 @@ void qSlicerDisplaySSMModuleWidget::onSelectInputModel()
   double* origin2 = meanImage->GetOrigin();
   std::cout<<"test7="<<origin2[0]<<" "<<origin2[1]<<" "<<origin2[2]<<std::endl;
 
+  vtkMetaImageWriter* writer2 = vtkMetaImageWriter::New();
+  //writer->SetFileName("/home/marine/Documents/SSM/Tools/PolyDataToImageData/meanVolume.mhd");
+  writer2->SetFileName("/Users/Marine/EPFL/Documents/Tools/ssmtool/PolyDataToImageData/meanVolume2.mhd");
+  writer2->SetInput(meanImage);
+  writer2->Write();
 
   //Create a scalar volume node with the created volume
   vtkNew<vtkMRMLScalarVolumeNode> volumeNode;
@@ -418,7 +432,7 @@ void qSlicerDisplaySSMModuleWidget::onSelectInputModel()
   //volumeNode->SetOrigin(14,36,bounds[4]); //Compensate Slicer coordinates
   volumeNode->SetSpacing(spacing);
   volumeNode->SetLabelMap(true);
-  this->mrmlScene()->AddNode( volumeNode.GetPointer() );
+  this->mrmlScene()->AddNode(volumeNode.GetPointer());
 
   // finally display the volume in the slice node
   vtkSlicerApplicationLogic * appLogic = qSlicerCoreApplication::application()->applicationLogic();
@@ -485,14 +499,20 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
      coefficients(pc) = std;
 
     //Calculate sample
-    typedef typename ItkRepresenterType::MeshType TestType;
-    typename TestType::Pointer itkSamplePC = itkModel->DrawSample(coefficients);
+    typedef ItkRepresenterType::MeshType TestType;
+    TestType::Pointer itkSamplePC = itkModel->DrawSample(coefficients);
 
     /*double prob = itkModel->ComputeProbabilityOfDataset(itkSamplePC);
     std::cout<<"prob = "<<prob<<std::endl;*/
 
     samplePC=d->convertMeshToVtk(itkSamplePC, samplePC);
   }
+  
+  //Set Visibility off of the previous model
+  vtkSmartPointer<vtkCollection> modelDisplayNodes = vtkSmartPointer<vtkCollection>::Take( this->mrmlScene()->GetNodesByClass("vtkMRMLModelDisplayNode") );
+  std::cout<<"Nb Collection= "<<modelDisplayNodes->GetNumberOfItems ()<<std::endl;
+  vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (modelDisplayNodes->GetNumberOfItems ()-1) );
+  modelViewNode->VisibilityOff();
 
   // Add polydata sample to the scene
   vtkNew<vtkMRMLModelDisplayNode> sampleDisplayNode;
