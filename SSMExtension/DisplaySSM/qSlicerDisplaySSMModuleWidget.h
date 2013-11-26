@@ -59,6 +59,8 @@ public:
   ItkStatisticalModelType::Pointer itkModel;
   //auto_ptr<VtkStatisticalModelType> vtkModel;
   VtkStatisticalModelType* vtkModel;
+  std::vector<std::string> nameITK;
+  int indexNode;
 
 public slots:
   void onSelect();

@@ -384,6 +384,9 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
   meanImage = d->convertPolyDataToImageData(meanModel, meanImage, &origin[0], spacing, &bounds[0]);
   std::cout<<"test5="<<origin[0]<<" "<<origin[1]<<" "<<origin[2]<<std::endl;
 
+  //int* extentsMean = meanImage->GetExtent();
+  //std::cout<<"extentsMean "<<extentsMean[0]<<" "<<extentsMean[1]<<" "<<extentsMean[2]<<" "<<extentsMean[3]<<" "<<extentsMean[4]<<" "<<extentsMean[5]<<std::endl;
+
   vtkMetaImageWriter* writer = vtkMetaImageWriter::New();
   //writer->SetFileName("/home/marine/Documents/SSM/Tools/PolyDataToImageData/meanVolume.mhd");
   writer->SetFileName("/Users/Marine/EPFL/Documents/Tools/ssmtool/PolyDataToImageData/meanVolume.mhd");
@@ -396,26 +399,15 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
   fileParameters["filename"] = "/home/marine/Documents/SSM/Tools/PolyDataToImageData/meanVolume.mhd";
   vtkMRMLNode* volumeNode = coreIOManager->loadNodesAndGetFirst("VolumeFile", fileParameters);*/
 
-  //vtkDataArray* data = meanImage->GetPointData()->GetScalars();
   //Create a displayable node and add to the scene
   vtkNew<vtkMRMLLabelMapVolumeDisplayNode> volumeDisplayNode;
   volumeDisplayNode->SetAndObserveColorNodeID("vtkMRMLColorTableNodeFileGenericAnatomyColors.txt");
   this->mrmlScene()->AddNode( volumeDisplayNode.GetPointer() );
 
-  /*int * dims = meanImage->GetDimensions();
-  int newExtent[6] = {0, dims[0] - 1, 0, dims[1] - 1, 0, dims[2] - 1};
-  meanImage->SetExtent(newExtent);*/
-
   meanImage->SetOrigin(0,0,0);
   //meanImage->SetOrigin(bounds[1], bounds[3], bounds[5]);
   double* origin2 = meanImage->GetOrigin();
   std::cout<<"test7="<<origin2[0]<<" "<<origin2[1]<<" "<<origin2[2]<<std::endl;
-
-  vtkMetaImageWriter* writer2 = vtkMetaImageWriter::New();
-  //writer->SetFileName("/home/marine/Documents/SSM/Tools/PolyDataToImageData/meanVolume.mhd");
-  writer2->SetFileName("/Users/Marine/EPFL/Documents/Tools/ssmtool/PolyDataToImageData/meanVolume2.mhd");
-  writer2->SetInput(meanImage);
-  writer2->Write();
 
   //Create a scalar volume node with the created volume
   vtkNew<vtkMRMLScalarVolumeNode> volumeNode;
@@ -432,7 +424,6 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
   //volumeNode->SetOrigin(14,36,bounds[4]); //Compensate Slicer coordinates
   volumeNode->SetSpacing(spacing);
   volumeNode->SetLabelMap(true);
-  //volumeNode->SetCenter(true);
   this->mrmlScene()->AddNode(volumeNode.GetPointer());
 
   // finally display the volume in the slice node
@@ -486,6 +477,18 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
   int pc = d->pcSlider->value()-1; // -1 because user can choose between 1 and max
   int std = d->stdSlider->value();
 
+  //display Sample name with PC and Std values
+  std::ostringstream ssSample;
+  ssSample <<"SamplePc"<<pc<<"Std"<<std;
+  std::string sampleName = ssSample.str();
+
+  bool alreadyCompute = false;
+
+  //Set Visibility off of the previous model
+  vtkSmartPointer<vtkCollection> modelDisplayNodes = vtkSmartPointer<vtkCollection>::Take( this->mrmlScene()->GetNodesByClass("vtkMRMLModelDisplayNode") );
+  std::cout<<"Nb Collection= "<<modelDisplayNodes->GetNumberOfItems ()<<std::endl;
+
+
   if (d->radioButtonVTK->isChecked()){
     int nbPrincipalComponent = vtkModel->GetNumberOfPrincipalComponents();
     VectorType coefficients = VectorType::Zero(nbPrincipalComponent);
@@ -495,52 +498,97 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
     std::cout<<"prob = "<<prob<<std::endl;*/
   }
   if (d->radioButtonITK->isChecked()){
-    int nbPrincipalComponent = itkModel->GetNumberOfPrincipalComponents();
-    itkVectorType coefficients(nbPrincipalComponent,0.0); // set the vector to 0
-     coefficients(pc) = std;
 
-    //Calculate sample
-    typedef ItkRepresenterType::MeshType TestType;
-    TestType::Pointer itkSamplePC = itkModel->DrawSample(coefficients);
+    typedef std::vector<std::string>::iterator ItemIterator;
+    ItemIterator iter = std::find(nameITK.begin(), nameITK.end(), sampleName);
+    size_t index = std::distance(nameITK.begin(), iter);
+    //std::cout<<"size= "<<nameITK.size()<<std::endl;
 
-    /*double prob = itkModel->ComputeProbabilityOfDataset(itkSamplePC);
-    std::cout<<"prob = "<<prob<<std::endl;*/
+    if (nameITK.size()!=0){
+      vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (4+indexNode) );
+      modelViewNode->VisibilityOff();
+    }
+    else{
+      vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (modelDisplayNodes->GetNumberOfItems ()-1) );
+      modelViewNode->VisibilityOff();
+    }
 
-    samplePC=d->convertMeshToVtk(itkSamplePC, samplePC);
+
+    if(iter!=nameITK.end()){
+        // Find the item
+      //vtkMRMLModelDisplayNode* modelViewNodePrevious = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (4+indexNode) );
+      //modelViewNodePrevious->VisibilityOff();
+
+      std::cout<<"Find Item "<<index<<std::endl;
+      alreadyCompute = true;
+
+      //Set Visibility on of the current model
+
+      vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (4+index) );
+      modelViewNode->VisibilityOn();
+
+    }else{
+
+      //vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (modelDisplayNodes->GetNumberOfItems ()-1) );
+      //modelViewNode->VisibilityOff();
+
+      nameITK.push_back(sampleName);
+      std::cout<<"Not Find Item "<<std::endl;
+      std::cout<<"size= "<<nameITK.size()<<std::endl;
+
+      int nbPrincipalComponent = itkModel->GetNumberOfPrincipalComponents();
+      itkVectorType coefficients(nbPrincipalComponent,0.0); // set the vector to 0
+       coefficients(pc) = std;
+
+      //Calculate sample
+      typedef ItkRepresenterType::MeshType TestType;
+      TestType::Pointer itkSamplePC = itkModel->DrawSample(coefficients);
+
+      /*double prob = itkModel->ComputeProbabilityOfDataset(itkSamplePC);
+      std::cout<<"prob = "<<prob<<std::endl;*/
+
+      samplePC=d->convertMeshToVtk(itkSamplePC, samplePC);
+    }
+    indexNode = index;
+    std::cout<<"indexNode= "<<index<<std::endl;
   }
   
-  //Set Visibility off of the previous model
-  vtkSmartPointer<vtkCollection> modelDisplayNodes = vtkSmartPointer<vtkCollection>::Take( this->mrmlScene()->GetNodesByClass("vtkMRMLModelDisplayNode") );
-  std::cout<<"Nb Collection= "<<modelDisplayNodes->GetNumberOfItems ()<<std::endl;
-  vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (modelDisplayNodes->GetNumberOfItems ()-1) );
-  modelViewNode->VisibilityOff();
+  if (!alreadyCompute){
 
-  // Add polydata sample to the scene
-  vtkNew<vtkMRMLModelDisplayNode> sampleDisplayNode;
-  srand(time(NULL)); // initialisation de rand
+    //Set Visibility off of the previous model
+    //vtkSmartPointer<vtkCollection> modelDisplayNodes = vtkSmartPointer<vtkCollection>::Take( this->mrmlScene()->GetNodesByClass("vtkMRMLModelDisplayNode") );
+    //std::cout<<"Nb Collection= "<<modelDisplayNodes->GetNumberOfItems ()<<std::endl;
+    //vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (modelDisplayNodes->GetNumberOfItems ()-1) );
+    //modelViewNode->VisibilityOff();
 
-  double r = (rand()/(double)RAND_MAX ); //random color between 0 and 1
-  double g = (rand()/(double)RAND_MAX );
-  double b = (rand()/(double)RAND_MAX );
-  sampleDisplayNode->SetColor(r,g,b); // random color
-  this->mrmlScene()->AddNode(sampleDisplayNode.GetPointer());
+    // Add polydata sample to the scene
+    vtkNew<vtkMRMLModelDisplayNode> sampleDisplayNode;
+    srand(time(NULL)); // initialisation de rand
 
-  vtkNew<vtkMRMLModelNode> sampleNode;
-  sampleNode->SetAndObservePolyData(samplePC);
-  sampleNode->SetAndObserveDisplayNodeID(sampleDisplayNode->GetID());
+    double r = (rand()/(double)RAND_MAX ); //random color between 0 and 1
+    double g = (rand()/(double)RAND_MAX );
+    double b = (rand()/(double)RAND_MAX );
+    sampleDisplayNode->SetColor(r,g,b); // random color
+    this->mrmlScene()->AddNode(sampleDisplayNode.GetPointer());
 
-  //display Sample name with PC and Std values
-  std::ostringstream ssSample;
-  ssSample <<"SamplePc"<<pc<<"Std"<<std;
-  std::string sampleName = ssSample.str();
+    vtkNew<vtkMRMLModelNode> sampleNode;
+    sampleNode->SetAndObservePolyData(samplePC);
+    sampleNode->SetAndObserveDisplayNodeID(sampleDisplayNode->GetID());
 
-  sampleNode->SetName(sampleName.c_str());
-  this->mrmlScene()->AddNode(sampleNode.GetPointer());
+    //display Sample name with PC and Std values
+    /*std::ostringstream ssSample;
+    ssSample <<"SamplePc"<<pc<<"Std"<<std;
+    std::string sampleName = ssSample.str();*/
 
-  samplePC->Delete();
+    sampleNode->SetName(sampleName.c_str());
+    this->mrmlScene()->AddNode(sampleNode.GetPointer());
 
-  /*vtkSlicerDisplaySSMLogic* moduleLogic = vtkSlicerDisplaySSMLogic::New();
-  moduleLogic->DisplaySampleModel(samplePC, this->mrmlScene());*/
+    samplePC->Delete();
+
+    /*vtkSlicerDisplaySSMLogic* moduleLogic = vtkSlicerDisplaySSMLogic::New();
+    moduleLogic->DisplaySampleModel(samplePC, this->mrmlScene());*/
+  }
+
 }
 
 //-----------------------------------------------------------------------------
