@@ -69,6 +69,12 @@
 #include "vtkMRMLSelectionNode.h"
 #include "vtkMatrix4x4.h"
 #include "vtkImageReslice.h"
+
+#include "vtkMRMLColorNode.h"
+#include "vtkMRMLColorTableNode.h"
+#include "vtkMRMLColorTableStorageNode.h"
+#include "vtkLookupTable.h"
+
 //
 #include "qSlicerApplication.h"
 #include "qSlicerLayoutManager.h"
@@ -226,7 +232,7 @@ vtkImageData* qSlicerDisplaySSMModuleWidgetPrivate::convertPolyDataToImageData(v
   whiteImage->AllocateScalars();
 
   // fill the image with foreground voxels:
-  unsigned char inval = 255;
+  unsigned char inval = 128; //255
   unsigned char outval = 0;
   vtkIdType count = whiteImage->GetNumberOfPoints();
   for (vtkIdType i = 0; i < count; ++i)
@@ -387,11 +393,11 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
   //int* extentsMean = meanImage->GetExtent();
   //std::cout<<"extentsMean "<<extentsMean[0]<<" "<<extentsMean[1]<<" "<<extentsMean[2]<<" "<<extentsMean[3]<<" "<<extentsMean[4]<<" "<<extentsMean[5]<<std::endl;
 
-  vtkMetaImageWriter* writer = vtkMetaImageWriter::New();
+  /*vtkMetaImageWriter* writer = vtkMetaImageWriter::New();
   //writer->SetFileName("/home/marine/Documents/SSM/Tools/PolyDataToImageData/meanVolume.mhd");
   writer->SetFileName("/Users/Marine/EPFL/Documents/Tools/ssmtool/PolyDataToImageData/meanVolume.mhd");
   writer->SetInput(meanImage);
-  writer->Write();
+  writer->Write();*/
 
 
   /*qSlicerCoreIOManager* coreIOManager = qSlicerCoreApplication::application()->coreIOManager();
@@ -399,13 +405,13 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
   fileParameters["filename"] = "/home/marine/Documents/SSM/Tools/PolyDataToImageData/meanVolume.mhd";
   vtkMRMLNode* volumeNode = coreIOManager->loadNodesAndGetFirst("VolumeFile", fileParameters);*/
 
+
   //Create a displayable node and add to the scene
   vtkNew<vtkMRMLLabelMapVolumeDisplayNode> volumeDisplayNode;
   volumeDisplayNode->SetAndObserveColorNodeID("vtkMRMLColorTableNodeFileGenericAnatomyColors.txt");
   this->mrmlScene()->AddNode( volumeDisplayNode.GetPointer() );
-
-  meanImage->SetOrigin(0,0,0);
-  //meanImage->SetOrigin(bounds[1], bounds[3], bounds[5]);
+  //meanImage->SetOrigin(-bounds[0],-bounds[2],bounds[4]);
+  meanImage->SetOrigin(0, 0, 0);
   double* origin2 = meanImage->GetOrigin();
   std::cout<<"test7="<<origin2[0]<<" "<<origin2[1]<<" "<<origin2[2]<<std::endl;
 
@@ -435,10 +441,6 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
   appLogic->PropagateVolumeSelection();
   appLogic->FitSliceToAll();
 
-  //vtkNew<vtkMRMLScalarVolumeDisplayNode> volumeDisplayNode;
-  //volumeNode->SetAndObserveDisplayNodeID(volumeDisplayNode->GetID());
-
-
   /*qSlicerApplication * app = qSlicerApplication::application();
   if (!app)
   {
@@ -454,7 +456,7 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
 
   meanModel->Delete();
   matrix->Delete();
-  writer->Delete();
+  //writer->Delete();
   meanImage->Delete();
 
    // Display Eigen spectrum
@@ -469,7 +471,7 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
 //-----------------------------------------------------------------------------
 void qSlicerDisplaySSMModuleWidget::onSelect()
 {
-  /**** ITK Model ****/
+  /**** Display Model ****/
   using std::auto_ptr;
   Q_D(qSlicerDisplaySSMModuleWidget);
   vtkPolyData* samplePC = vtkPolyData::New();
@@ -482,12 +484,11 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
   ssSample <<"SamplePc"<<pc<<"Std"<<std;
   std::string sampleName = ssSample.str();
 
-  bool alreadyCompute = false;
+  bool alreadyCompute = false; //boolean to check if the model aready exist
 
-  //Set Visibility off of the previous model
+  //Get the model Display node
   vtkSmartPointer<vtkCollection> modelDisplayNodes = vtkSmartPointer<vtkCollection>::Take( this->mrmlScene()->GetNodesByClass("vtkMRMLModelDisplayNode") );
   std::cout<<"Nb Collection= "<<modelDisplayNodes->GetNumberOfItems ()<<std::endl;
-
 
   if (d->radioButtonVTK->isChecked()){
     int nbPrincipalComponent = vtkModel->GetNumberOfPrincipalComponents();
@@ -500,9 +501,8 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
   if (d->radioButtonITK->isChecked()){
 
     typedef std::vector<std::string>::iterator ItemIterator;
-    ItemIterator iter = std::find(nameITK.begin(), nameITK.end(), sampleName);
+    ItemIterator iter = std::find(nameITK.begin(), nameITK.end(), sampleName); //check if the name already exists
     size_t index = std::distance(nameITK.begin(), iter);
-    //std::cout<<"size= "<<nameITK.size()<<std::endl;
 
     if (nameITK.size()!=0){
       vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (4+indexNode) );
@@ -513,31 +513,17 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
       modelViewNode->VisibilityOff();
     }
 
-
-    if(iter!=nameITK.end()){
-        // Find the item
-      //vtkMRMLModelDisplayNode* modelViewNodePrevious = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (4+indexNode) );
-      //modelViewNodePrevious->VisibilityOff();
-
-      std::cout<<"Find Item "<<index<<std::endl;
+    if(iter!=nameITK.end()){ //model already exists
       alreadyCompute = true;
-
       //Set Visibility on of the current model
-
       vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (4+index) );
       modelViewNode->VisibilityOn();
 
     }else{
-
-      //vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (modelDisplayNodes->GetNumberOfItems ()-1) );
-      //modelViewNode->VisibilityOff();
-
       nameITK.push_back(sampleName);
-      std::cout<<"Not Find Item "<<std::endl;
-      std::cout<<"size= "<<nameITK.size()<<std::endl;
 
       int nbPrincipalComponent = itkModel->GetNumberOfPrincipalComponents();
-      itkVectorType coefficients(nbPrincipalComponent,0.0); // set the vector to 0
+      itkVectorType coefficients(nbPrincipalComponent,0.0); // initialize the vector to 0
        coefficients(pc) = std;
 
       //Calculate sample
@@ -550,16 +536,9 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
       samplePC=d->convertMeshToVtk(itkSamplePC, samplePC);
     }
     indexNode = index;
-    std::cout<<"indexNode= "<<index<<std::endl;
   }
   
   if (!alreadyCompute){
-
-    //Set Visibility off of the previous model
-    //vtkSmartPointer<vtkCollection> modelDisplayNodes = vtkSmartPointer<vtkCollection>::Take( this->mrmlScene()->GetNodesByClass("vtkMRMLModelDisplayNode") );
-    //std::cout<<"Nb Collection= "<<modelDisplayNodes->GetNumberOfItems ()<<std::endl;
-    //vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (modelDisplayNodes->GetNumberOfItems ()-1) );
-    //modelViewNode->VisibilityOff();
 
     // Add polydata sample to the scene
     vtkNew<vtkMRMLModelDisplayNode> sampleDisplayNode;
@@ -575,19 +554,13 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
     sampleNode->SetAndObservePolyData(samplePC);
     sampleNode->SetAndObserveDisplayNodeID(sampleDisplayNode->GetID());
 
-    //display Sample name with PC and Std values
-    /*std::ostringstream ssSample;
-    ssSample <<"SamplePc"<<pc<<"Std"<<std;
-    std::string sampleName = ssSample.str();*/
-
     sampleNode->SetName(sampleName.c_str());
     this->mrmlScene()->AddNode(sampleNode.GetPointer());
-
-    samplePC->Delete();
 
     /*vtkSlicerDisplaySSMLogic* moduleLogic = vtkSlicerDisplaySSMLogic::New();
     moduleLogic->DisplaySampleModel(samplePC, this->mrmlScene());*/
   }
+  samplePC->Delete();
 
 }
 
@@ -651,13 +624,10 @@ void qSlicerDisplaySSMModuleWidget::displayEigenSpectrum(unsigned int nbPrincipa
     a->SetComponent(i, 2, 0);
   }
   
-  std::cout<<"test"<<std::endl;
   // Create a Chart Node.
   vtkNew<vtkMRMLChartNode> chartNode;
   chartNode->AddArray("EigenSpectrum", doubleArrayNode->GetID());
   this->mrmlScene()->AddNode(chartNode.GetPointer());
-
-  std::cout<<"test2"<<std::endl;
   
   // Set properties on the Chart
   chartNode->SetProperty("default", "title", "EigenSpectrum");
@@ -665,11 +635,9 @@ void qSlicerDisplaySSMModuleWidget::displayEigenSpectrum(unsigned int nbPrincipa
   chartNode->SetProperty("default", "yAxisLabel", "Eigen value");
   chartNode->SetProperty("default", "type", "Line");
   chartNode->SetProperty("default", "showMarkers", "on");
-  std::cout<<"test3"<<std::endl;
+
   // Tell the Chart View which Chart to display
   chartViewNode->SetChartNodeID(chartNode->GetID());
-
-  std::cout<<"test4"<<std::endl;
 
 }
 
