@@ -66,6 +66,9 @@ public slots:
   void onSelect();
   void onSelectInputModel();
   void applyModel();
+  void selectPolyData1();
+  void selectPolyData2();
+  void comparePolyData();
 
 protected:
   QScopedPointer<qSlicerDisplaySSMModuleWidgetPrivate> d_ptr;

@@ -49,6 +49,10 @@
 #include <vtkImageStencil.h>
 #include <vtkPointData.h>
 
+//Compare PolyData
+#include "vtkPointLocator.h"
+#include "vtkMath.h"
+
 // DisplaySSM Logic includes
 #include "vtkSlicerDisplaySSMLogic.h"
 
@@ -641,3 +645,87 @@ void qSlicerDisplaySSMModuleWidget::displayEigenSpectrum(unsigned int nbPrincipa
 
 }
 
+//-----------------------------------------------------------------------------
+void qSlicerDisplaySSMModuleWidget::selectPolyData1()
+{
+  Q_D(qSlicerDisplaySSMModuleWidget);
+  QString inputFile = QFileDialog::getOpenFileName(this, "Select input polyData1", QString());
+  d->polyData1Name->setText(inputFile);
+}
+
+//-----------------------------------------------------------------------------
+void qSlicerDisplaySSMModuleWidget::selectPolyData2()
+{
+  Q_D(qSlicerDisplaySSMModuleWidget);
+  QString inputFile = QFileDialog::getOpenFileName(this, "Select input model", QString());
+  d->polyData2Name->setText(inputFile);
+}
+
+//-----------------------------------------------------------------------------
+void qSlicerDisplaySSMModuleWidget::comparePolyData()
+{
+  Q_D(qSlicerDisplaySSMModuleWidget);
+  std::string polyData1String = d->polyData1Name->text().toStdString();
+  std::string polyData2String = d->polyData2Name->text().toStdString();
+
+  vtkNew<vtkPolyDataReader> reader1;
+  reader1->SetFileName(polyData1String.c_str());
+  reader1->Update();
+  vtkSmartPointer< vtkPolyData > polyData1 = reader1->GetOutput();
+
+  vtkNew<vtkPolyDataReader> reader2;
+  reader2->SetFileName(polyData2String.c_str());
+  reader2->Update();
+  vtkSmartPointer< vtkPolyData >  polyData2 = reader2->GetOutput();
+
+  vtkSmartPointer<vtkPointLocator> pointLocator2 = vtkSmartPointer<vtkPointLocator>::New();
+  pointLocator2->SetDataSet(polyData2);
+
+  vtkSmartPointer<vtkFloatArray> scalars = vtkSmartPointer<vtkFloatArray>::New();
+  scalars->SetNumberOfComponents(1);
+  scalars->Allocate(polyData1->GetNumberOfPoints(),1000);
+
+  for (vtkIdType i=0; i<polyData1->GetNumberOfPoints(); i++){
+      double Xi[3];
+      polyData1->GetPoint(i,Xi);
+      double Yid[3];
+      int ptLocatorId = pointLocator2->FindClosestPoint(Xi);
+      polyData2->GetPoint(ptLocatorId,Yid);
+      double distance = sqrt(vtkMath::Distance2BetweenPoints(Xi,Yid));
+      scalars->InsertTuple1(i,distance);
+    }
+
+  vtkSmartPointer<vtkPointLocator> pointLocator1 = vtkSmartPointer<vtkPointLocator>::New();
+  pointLocator1->SetDataSet(polyData1);
+
+  for (vtkIdType i=0; i<polyData2->GetNumberOfPoints(); i++){
+      double Yi[3];
+      polyData2->GetPoint(i,Yi);
+      double Xid[3];
+      vtkIdType ptLocatorId = pointLocator1->FindClosestPoint(Yi);
+      polyData1->GetPoint(ptLocatorId,Xid);
+      double distance = sqrt(vtkMath::Distance2BetweenPoints(Yi,Xid));
+      double xdistance = scalars->GetTuple1(ptLocatorId);
+      if (distance>xdistance){
+          scalars->SetTuple1(ptLocatorId,distance);
+        }
+    }
+  polyData1->GetPointData()->SetScalars(scalars);
+  scalars->SetName("scalarsDis");
+
+  // Add polydata to the scene
+  vtkNew<vtkMRMLModelDisplayNode> sampleDisplayNode;
+  sampleDisplayNode->SetScalarVisibility(true);
+  sampleDisplayNode->SetActiveScalarName(scalars->GetName());
+  sampleDisplayNode->SetAutoScalarRange(true);
+  sampleDisplayNode->SetAndObserveColorNodeID("vtkMRMLColorTableNodeWarm1");
+  this->mrmlScene()->AddNode(sampleDisplayNode.GetPointer());
+
+  vtkNew<vtkMRMLModelNode> sampleNode;
+  sampleNode->SetAndObservePolyData(polyData1);
+  sampleNode->SetAndObserveDisplayNodeID(sampleDisplayNode->GetID());
+
+  sampleNode->SetName(d->outputPolyDataName->text().toStdString().c_str());
+  this->mrmlScene()->AddNode(sampleNode.GetPointer());
+
+}

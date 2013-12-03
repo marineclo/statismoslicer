@@ -28,7 +28,7 @@ if(${EXTENSION_NAME}_SUPERBUILD)
 endif()
 
 #-----------------------------------------------------------------------------
-#add_subdirectory(SuperCLIModuleTemplate)
+#add_subdirectory(ComparePolyData)
 add_subdirectory(DisplaySSM)
 
 #-----------------------------------------------------------------------------
