@@ -468,6 +468,8 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
 
   // Set the number of components for the pcSlider
   d->pcSlider->setMaximum(nbPrincipalComponent);
+  d->pcSlider->setValue(1);
+  d->stdSlider->setValue(0);
   std::cout<<"test5"<<std::endl;
 
 }
