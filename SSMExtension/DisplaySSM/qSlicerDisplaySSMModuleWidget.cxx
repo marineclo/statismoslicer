@@ -720,7 +720,7 @@ void qSlicerDisplaySSMModuleWidget::comparePolyData()
   scalars->SetName("scalarsDis");
   double rangeScalars[2];
   scalars->GetRange(rangeScalars);
-  std::cout<<"min= "<<rangeScalars[0]<<" max = "<<rangeScalars<<std::endl;
+  std::cout<<"min= "<<rangeScalars[0]<<" max = "<<rangeScalars[1]<<std::endl;
 
   // Add polydata to the scene
   vtkNew<vtkMRMLModelDisplayNode> sampleDisplayNode;
