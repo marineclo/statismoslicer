@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>qSlicerLandmarkSegmentationModuleWidget</class>
+ <widget class="qSlicerWidget" name="qSlicerLandmarkSegmentationModuleWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>527</width>
+    <height>319</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="ctkCollapsibleButton" name="CTKCollapsibleButton">
+     <property name="text">
+      <string>Display</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <property name="margin">
+       <number>0</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="inputModel">
+        <property name="text">
+         <string>Input Model</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" colspan="3">
+       <widget class="QPushButton" name="inputModelButton">
+        <property name="text">
+         <string>Open Model</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="modelName">
+        <property name="text">
+         <string>Model Name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1" colspan="3">
+       <widget class="QLineEdit" name="modelNamePath"/>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="inputCTscan">
+        <property name="text">
+         <string>Input CT scan</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QPushButton" name="ctScanButton">
+        <property name="text">
+         <string>CT scan</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2" colspan="2">
+       <widget class="QLineEdit" name="targetName"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="inputFid">
+        <property name="text">
+         <string>Input Fid</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QPushButton" name="inputFidButton">
+        <property name="text">
+         <string>Input Fiducial</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2" colspan="2">
+       <widget class="QLineEdit" name="movingLandmarksName"/>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="refFid">
+        <property name="text">
+         <string>Ref Fid</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QPushButton" name="refFidButton">
+        <property name="text">
+         <string>Reference Fiducial</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2" colspan="2">
+       <widget class="QLineEdit" name="fixedLandmarksName"/>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="thresholdName">
+        <property name="text">
+         <string>Threshold</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="QLineEdit" name="threshold"/>
+      </item>
+      <item row="6" column="3">
+       <widget class="QLineEdit" name="lmVariance"/>
+      </item>
+      <item row="6" column="2">
+       <widget class="QLabel" name="varianceName">
+        <property name="text">
+         <string>Variance</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="outputName">
+        <property name="text">
+         <string>Output Name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1" colspan="3">
+       <widget class="QLineEdit" name="outputMeshName"/>
+      </item>
+      <item row="8" column="1" colspan="3">
+       <widget class="QPushButton" name="applyButton">
+        <property name="text">
+         <string>Apply</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>qSlicerWidget</class>
+   <extends>QWidget</extends>
+   <header>qSlicerWidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ctkCollapsibleButton</class>
+   <extends>QWidget</extends>
+   <header>ctkCollapsibleButton.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>inputModelButton</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>qSlicerLandmarkSegmentationModuleWidget</receiver>
+   <slot>setModel()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>114</x>
+     <y>57</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1</x>
+     <y>49</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>ctScanButton</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>qSlicerLandmarkSegmentationModuleWidget</receiver>
+   <slot>setCTscan()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>126</x>
+     <y>123</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>3</x>
+     <y>96</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>inputFidButton</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>qSlicerLandmarkSegmentationModuleWidget</receiver>
+   <slot>setInputFid()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>186</x>
+     <y>148</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>5</x>
+     <y>138</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>refFidButton</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>qSlicerLandmarkSegmentationModuleWidget</receiver>
+   <slot>setRefFid()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>133</x>
+     <y>189</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>2</x>
+     <y>170</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>applyButton</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>qSlicerLandmarkSegmentationModuleWidget</receiver>
+   <slot>apply()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>182</x>
+     <y>280</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>11</x>
+     <y>303</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>setModel()</slot>
+  <slot>setCTscan()</slot>
+  <slot>setInputFid()</slot>
+  <slot>setRefFid()</slot>
+  <slot>apply()</slot>
+ </slots>
+</ui>
