@@ -1,5 +1,11 @@
 
 #-----------------------------------------------------------------------------
+# Third party libraries
+find_package(Statismo REQUIRED)
+
+link_directories(${STATISMO_LIBRARY_DIR})
+
+#-----------------------------------------------------------------------------
 set(MODULE_NAME LandmarkSegmentation)
 set(MODULE_TITLE ${MODULE_NAME})
 
@@ -42,7 +48,8 @@ set(MODULE_TARGET_LIBRARIES
   #qSlicer${MODULE_NAME}ModuleWidgets
   ${ITK_LIBRARIES}
   ${STATISMO_LIBRARIES}
-  ${VTK_LIBRARIES} ${VTK_HDF5_LIBRARIES}
+  ${VTK_LIBRARIES} 
+  ${VTK_HDF5_LIBRARIES}
   )
 
 set(MODULE_RESOURCES

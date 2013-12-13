@@ -41,7 +41,7 @@ public:
 public slots:
   void setRefFid();
   void setModel();
-  void setInpuFid();
+  void setInputFid();
   void setCTscan();
   void apply();
 

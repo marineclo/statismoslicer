@@ -38,14 +38,14 @@
        </widget>
       </item>
       <item row="2" column="0">
-       <widget class="QLabel" name="modelName">
+       <widget class="QLabel" name="modelNameLabel">
         <property name="text">
          <string>Model Name</string>
         </property>
        </widget>
       </item>
       <item row="2" column="1" colspan="3">
-       <widget class="QLineEdit" name="modelNamePath"/>
+       <widget class="QLineEdit" name="modelName"/>
       </item>
       <item row="3" column="0">
        <widget class="QLabel" name="inputCTscan">
