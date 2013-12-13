@@ -270,7 +270,7 @@ vtkPolyData* qSlicerLandmarkSegmentationModuleWidgetPrivate::convertMeshToVtk(Me
   vtkCellArray * m_Polys = vtkCellArray::New();
 
   int numPoints =  meshToConvert->GetNumberOfPoints();
-  std::cout<<"numPoints = "<<numPoints<<std::endl;
+  //std::cout<<"numPoints = "<<numPoints<<std::endl;
 
   InputPointsContainerPointer      myPoints = meshToConvert->GetPoints();
   InputPointsContainerIterator     points = myPoints->Begin();
@@ -408,16 +408,12 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   thresholdFilter->SetLowerThreshold( d->threshold->text().toFloat() );
   CTImageType::Pointer thresholdImage = thresholdFilter->GetOutput();
   
-  DistanceImageWriterType::Pointer thresholdWriter = DistanceImageWriterType::New();
+  /*DistanceImageWriterType::Pointer thresholdWriter = DistanceImageWriterType::New();
   thresholdWriter->SetInput(thresholdFilter->GetOutput());
   //thresholdWriter->SetFileName("/Volumes/MYPASSPORT/TestSegmentation/data136TestSeg-label.nrrd");
   thresholdWriter->SetFileName("/tmp/data136TestSeg-label.nrrd");
-  thresholdWriter->Update();
+  thresholdWriter->Update();*/
         
-  /*CTImageReaderType::Pointer thresholdReader = CTImageReaderType::New();
-  thresholdReader->SetFileName(thresholdImageName);
-  thresholdReader->Update();
-  CTImageType::Pointer thresholdImage = thresholdReader->GetOutput();*/
         
   DistanceMapImageFilterType::Pointer dm = DistanceMapImageFilterType::New();
   dm->SetInput(thresholdImage);
@@ -516,10 +512,6 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   transformMeshFilter->SetInput(model->GetRepresenter()->GetReference());
   transformMeshFilter->SetTransform(transform);
   transformMeshFilter->Update();
-
-  MeshType::Pointer meshOut = transformMeshFilter->GetOutput();
-  int numPoints =  meshOut->GetNumberOfPoints();
-  std::cout<<"numPoints1 = "<<numPoints<<std::endl;
   
   vtkPolyData* outputPolyData = vtkPolyData::New();
   outputPolyData=d->convertMeshToVtk(transformMeshFilter->GetOutput(), outputPolyData);
@@ -535,10 +527,10 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   this->mrmlScene()->AddNode(meanNode.GetPointer());
   
   // Write out the fitting result
-  itk::MeshFileWriter<MeshType>::Pointer writer = itk::MeshFileWriter<MeshType>::New();
+  /*itk::MeshFileWriter<MeshType>::Pointer writer = itk::MeshFileWriter<MeshType>::New();
   writer->SetFileName("/tmp/mesh136result.vtk");
   writer->SetInput(transformMeshFilter->GetOutput());
-  writer->Update();
+  writer->Update();*/
   
   outputPolyData->Delete();
         
