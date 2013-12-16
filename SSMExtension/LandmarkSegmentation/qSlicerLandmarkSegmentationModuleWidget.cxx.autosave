@@ -50,6 +50,8 @@
 #include "itkSignedDanielssonDistanceMapImageFilter.h"
 #include "itkBinaryThresholdImageFilter.h"
 #include "itkPointsLocator.h"
+#include <itkTransformFileWriter.h>
+#include <itkTransformFileReader.h>
 
 // convert itk Mesh to vtk PolyData
 #include "vtkPolyData.h"
@@ -67,6 +69,7 @@
 #include "vtkMRMLModelNode.h"
 #include "vtkMRMLModelDisplayNode.h"
 #include "vtkMRMLScene.h"
+#include "vtkMRMLMarkupsFiducialNode.h"
 
 const unsigned Dimensions = 3;
 typedef itk::Mesh<float, Dimensions  > MeshType;
@@ -77,6 +80,7 @@ typedef itk::ImageFileReader<CTImageType> CTImageReaderType;
 typedef itk::ImageFileWriter<DistanceImageType> DistanceImageWriterType;
 typedef itk::MeshRepresenter<float, Dimensions> RepresenterType;
 typedef itk::MeshFileReader<MeshType> MeshReaderType;
+typedef itk::MeshFileWriter<MeshType> MeshWriterType;
 typedef itk::Image< itk::CovariantVector<float, Dimensions>, Dimensions >   GradientImageType;
 //typedef itk::MeanSquaresPointSetToImageMetric<MeshType, DistanceImageType> MetricType;
 typedef itk::PenalizingMeanSquaresPointSetToImageMetric<MeshType, DistanceImageType> MetricType;
@@ -114,10 +118,103 @@ public:
   itkNewMacro( Self );
 
   typedef itk::LBFGSOptimizer    OptimizerType;
-  //typedef itk::GradientDescentOptimizer OptimizerType;
+  typedef const OptimizerType   *OptimizerPointer;
 
-  typedef const OptimizerType                     *OptimizerPointer;
+  typedef itk::CompositeTransform<double, 3> CompositeTransformType;
+  //typedef const CompositeTransformType   *CompositeTransformPointer;
 
+  void SetParameters(StatisticalModelType::Pointer model, StatisticalModelType::Pointer constraintModel, RigidTransformType::Pointer rigidTransform, vtkMRMLScene* scene){
+    m_model = model;
+    m_constraintModel = constraintModel;
+    m_rigidTransform = rigidTransform;
+    m_scene = scene;
+  }
+
+  vtkPolyData* convertMeshToVtk(MeshType::Pointer meshToConvert, vtkPolyData *  m_PolyDataReturn)
+  {
+    typedef MeshType::MeshTraits                      TriangleMeshTraits;
+    typedef MeshType::PointType                       PointType;
+    typedef MeshType::PointsContainer                 InputPointsContainer;
+    typedef InputPointsContainer::Pointer             InputPointsContainerPointer;
+    typedef InputPointsContainer::Iterator            InputPointsContainerIterator;
+    typedef MeshType::CellType                        CellType;
+
+    typedef MeshType::CellsContainerPointer           CellsContainerPointer;
+    typedef MeshType::CellsContainerIterator          CellsContainerIterator;
+
+    //vtkPoints  *   m_Points = vtkPoints::New();
+    vtkSmartPointer< vtkPoints >   m_Points = vtkSmartPointer< vtkPoints >::New();
+    vtkSmartPointer< vtkPolyData >   m_PolyData = vtkSmartPointer< vtkPolyData >::New();
+
+    vtkCellArray * m_Polys = vtkCellArray::New();
+
+    int numPoints =  meshToConvert->GetNumberOfPoints();
+    //std::cout<<"numPoints = "<<numPoints<<std::endl;
+
+    InputPointsContainerPointer      myPoints = meshToConvert->GetPoints();
+    InputPointsContainerIterator     points = myPoints->Begin();
+    PointType point;
+
+    if (numPoints == 0)
+    {
+      printf( "Aborting: No Points in GRID\n");
+    }
+
+    m_Points->SetNumberOfPoints(numPoints);
+
+    int idx=0;
+    float vpoint[3];
+    while( points != myPoints->End() )
+    {
+      point = points.Value();
+      vpoint[0]= point[0];
+      vpoint[1]= point[1];
+      vpoint[2]= point[2];
+      m_Points->SetPoint(idx++,vpoint);
+      points++;
+    }
+
+    m_PolyData->SetPoints(m_Points);
+
+    //m_Points->Delete();
+
+    CellsContainerPointer cells = meshToConvert->GetCells();
+    CellsContainerIterator cellIt = cells->Begin();
+    vtkIdType pts[3];
+    while ( cellIt != cells->End() )
+    {
+      CellType *nextCell = cellIt->Value();
+      CellType::PointIdIterator pointIt = nextCell->PointIdsBegin();
+      int i;
+
+      switch (nextCell->GetType())
+      {
+        case CellType::VERTEX_CELL:
+        case CellType::LINE_CELL:
+        case CellType::POLYGON_CELL:
+          break;
+        case CellType::TRIANGLE_CELL:
+          i=0;
+          while (pointIt != nextCell->PointIdsEnd() )
+          {
+            pts[i++] = *pointIt++;
+          }
+          m_Polys->InsertNextCell(3,pts);
+          break;
+        default:
+          printf("something \n");
+      }
+      cellIt++;
+
+    }
+
+    m_PolyData->SetPolys(m_Polys);
+    m_Polys->Delete();
+
+    m_PolyDataReturn->ShallowCopy(m_PolyData);
+
+    return m_PolyDataReturn;
+  }
 
    void Execute(itk::Object *caller, const itk::EventObject & event)
   {
@@ -135,8 +232,39 @@ public:
     }
 
     std::cout << "Iteration: " << ++m_iter_no ;
-   std::cout << "; Value: " << optimizer->GetCachedValue();
+    std::cout << "; Value: " << optimizer->GetCachedValue();
     std::cout << "; Current Parameters: " << optimizer->GetCachedCurrentPosition() << std::endl;
+
+    StatisticalModelTransformType::Pointer statModelTransform = StatisticalModelTransformType::New();
+    statModelTransform->SetStatisticalModel(m_constraintModel);
+    statModelTransform->SetParameters(optimizer->GetCachedCurrentPosition());
+
+    // compose the two transformation
+    CompositeTransformType::Pointer transform = CompositeTransformType::New();
+    transform->AddTransform(m_rigidTransform);
+    transform->AddTransform(statModelTransform);
+
+    //typedef itk::TransformMeshFilter<MeshType, MeshType, CompositeTransformType> TransformMeshFilterType;
+    TransformMeshFilterType::Pointer transformMeshFilter = TransformMeshFilterType::New();
+    transformMeshFilter->SetInput(m_model->GetRepresenter()->GetReference());
+    transformMeshFilter->SetTransform(transform);
+    transformMeshFilter->Update();
+
+    vtkPolyData* outputPolyData = vtkPolyData::New();
+    outputPolyData=convertMeshToVtk(transformMeshFilter->GetOutput(), outputPolyData);
+
+    //Add to the scene
+    vtkNew<vtkMRMLModelDisplayNode> modelDisplayNode;
+    m_scene->AddNode(modelDisplayNode.GetPointer());
+
+    QString outputModelName = "OutputModelSeg" +QString::number(m_iter_no);
+    vtkNew<vtkMRMLModelNode> meanNode;
+    meanNode->SetAndObservePolyData(outputPolyData);
+    meanNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
+    meanNode->SetName(outputModelName.toStdString().c_str());
+    m_scene->AddNode(meanNode.GetPointer());
+
+    outputPolyData->Delete();
   }
 
 
@@ -145,6 +273,11 @@ protected:
      m_iter_no(0)     {};
 
   virtual ~IterationStatusObserver(){};
+
+  StatisticalModelType::Pointer m_model;
+  StatisticalModelType::Pointer m_constraintModel;
+  RigidTransformType::Pointer m_rigidTransform;
+  vtkMRMLScene* m_scene;
 
 private:
   int m_iter_no;
@@ -234,7 +367,7 @@ const  std::vector<PointType >& modelLandmarks,const  std::vector<PointType >& t
   assert(modelLandmarks.size() == targetLandmarks.size());
   for (unsigned i = 0; i < targetLandmarks.size(); i++) {
 
-	int closestPointId = ptLocator->FindClosestPoint(modelLandmarks[i]);
+    int closestPointId = ptLocator->FindClosestPoint(modelLandmarks[i]);
     PointType refPoint = (*reference->GetPoints())[closestPointId];
 
     // compensate for the rigid transformation that was applied to the model
@@ -395,6 +528,18 @@ void qSlicerLandmarkSegmentationModuleWidget::setCTscan(){
 void qSlicerLandmarkSegmentationModuleWidget::apply(){
   Q_D(qSlicerLandmarkSegmentationModuleWidget);
 
+  std::vector<PointType> ptList;
+  vtkMRMLMarkupsFiducialNode* markupsNode =  d->qMRMLMarkupsNodeComboBox->currentNodeID();
+  for (int i=0;i<markupsNode->GetNumberOfFiducials();i++){
+      double pos[3];
+      markupsNode->GetNthFiducialPosition(i,pos);
+      pos[0] = -pos[0];
+      pos[1] = -pos[1];
+      ptList.push_back(pos);
+      std::cout<<"pt[0]= "<<pos[0]<<" pt[1]= "<<pos[1]<<" pt[2]= "<<pos[2]<<std::endl;
+    }
+
+ /*
   // load the image to which we will fit
   CTImageReaderType::Pointer targetReader = CTImageReaderType::New();
   targetReader->SetFileName(d->targetName->text().toStdString().c_str());
@@ -408,13 +553,6 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   thresholdFilter->SetLowerThreshold( d->threshold->text().toFloat() );
   CTImageType::Pointer thresholdImage = thresholdFilter->GetOutput();
   
-  /*DistanceImageWriterType::Pointer thresholdWriter = DistanceImageWriterType::New();
-  thresholdWriter->SetInput(thresholdFilter->GetOutput());
-  //thresholdWriter->SetFileName("/Volumes/MYPASSPORT/TestSegmentation/data136TestSeg-label.nrrd");
-  thresholdWriter->SetFileName("/tmp/data136TestSeg-label.nrrd");
-  thresholdWriter->Update();*/
-        
-        
   DistanceMapImageFilterType::Pointer dm = DistanceMapImageFilterType::New();
   dm->SetInput(thresholdImage);
   dm->Update();
@@ -481,6 +619,8 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   ObserverType::Pointer observer = ObserverType::New();
   optimizer->AddObserver( itk::IterationEvent(), observer );
 
+  observer->SetParameters(model, constraintModel, rigidTransform, this->mrmlScene());
+
   // set up the metric and interpolators
   MetricType::Pointer metric = MetricType::New();
   metric->SetRegularizationParameter(0.01);
@@ -501,7 +641,7 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   registration->SetMovingImage(distanceImage);
 
   try {
-	std::cout << "starting model fitting" << std::endl;
+    std::cout << "starting model fitting" << std::endl;
     registration->Update();
 
   } catch ( itk::ExceptionObject& o ) {
@@ -523,15 +663,9 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   vtkNew<vtkMRMLModelNode> meanNode;
   meanNode->SetAndObservePolyData(outputPolyData);
   meanNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
-  meanNode->SetName("OutputModelSeg");
+  meanNode->SetName("OutputModelSegFinal");
   this->mrmlScene()->AddNode(meanNode.GetPointer());
   
-  // Write out the fitting result
-  /*itk::MeshFileWriter<MeshType>::Pointer writer = itk::MeshFileWriter<MeshType>::New();
-  writer->SetFileName("/tmp/mesh136result.vtk");
-  writer->SetInput(transformMeshFilter->GetOutput());
-  writer->Update();*/
-  
   outputPolyData->Delete();
-        
+        */
 }
