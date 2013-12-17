@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>527</width>
-    <height>345</height>
+    <height>382</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,10 +23,55 @@
       <property name="margin">
        <number>0</number>
       </property>
+      <item row="7" column="1">
+       <widget class="QLineEdit" name="threshold"/>
+      </item>
+      <item row="5" column="1" colspan="3">
+       <widget class="qMRMLNodeComboBox" name="qMRMLMarkupsNodeComboBox">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="nodeTypes">
+         <stringlist>
+          <string>vtkMRMLMarkupsFiducialNode</string>
+         </stringlist>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1" colspan="3">
+       <widget class="qMRMLNodeComboBox" name="qMRMLRefMarkupsNodeComboBox">
+        <property name="nodeTypes">
+         <stringlist>
+          <string>vtkMRMLMarkupsFiducialNode</string>
+         </stringlist>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="0">
        <widget class="QLabel" name="inputModel">
         <property name="text">
          <string>Input Model</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLabel" name="thresholdName">
+        <property name="text">
+         <string>Threshold</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0">
+       <widget class="QLabel" name="outputName">
+        <property name="text">
+         <string>Output Name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="modelNameLabel">
+        <property name="text">
+         <string>Model Name</string>
         </property>
        </widget>
       </item>
@@ -37,16 +82,6 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="modelName">
-        <property name="text">
-         <string>Model Name</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1" colspan="3">
-       <widget class="QLineEdit" name="modelNamePath"/>
-      </item>
       <item row="3" column="0">
        <widget class="QLabel" name="inputCTscan">
         <property name="text">
@@ -54,95 +89,48 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="1">
-       <widget class="QPushButton" name="ctScanButton">
-        <property name="text">
-         <string>CT scan</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="2" colspan="2">
-       <widget class="QLineEdit" name="targetName"/>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="inputFid">
-        <property name="text">
-         <string>Input Fid</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QPushButton" name="inputFidButton">
-        <property name="text">
-         <string>Input Fiducial</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2" colspan="2">
-       <widget class="QLineEdit" name="movingLandmarksName"/>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="refFid">
-        <property name="text">
-         <string>Ref Fid</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="QPushButton" name="refFidButton">
-        <property name="text">
-         <string>Reference Fiducial</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="2" colspan="2">
-       <widget class="QLineEdit" name="fixedLandmarksName"/>
-      </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="thresholdName">
-        <property name="text">
-         <string>Threshold</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1">
-       <widget class="QLineEdit" name="threshold"/>
-      </item>
-      <item row="6" column="3">
-       <widget class="QLineEdit" name="lmVariance"/>
-      </item>
-      <item row="6" column="2">
+      <item row="7" column="2">
        <widget class="QLabel" name="varianceName">
         <property name="text">
          <string>Variance</string>
         </property>
        </widget>
       </item>
-      <item row="8" column="0">
-       <widget class="QLabel" name="outputName">
-        <property name="text">
-         <string>Output Name</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="1" colspan="3">
-       <widget class="QLineEdit" name="outputMeshName"/>
-      </item>
-      <item row="9" column="1" colspan="3">
+      <item row="10" column="1" colspan="3">
        <widget class="QPushButton" name="applyButton">
         <property name="text">
          <string>Apply</string>
         </property>
        </widget>
       </item>
-      <item row="7" column="1">
-       <widget class="qMRMLNodeComboBox" name="qMRMLMarkupsNodeComboBox">
-        <property name="enabled">
-         <bool>false</bool>
+      <item row="9" column="1" colspan="3">
+       <widget class="QLineEdit" name="outputMeshName"/>
+      </item>
+      <item row="7" column="3">
+       <widget class="QLineEdit" name="lmVariance"/>
+      </item>
+      <item row="2" column="1" colspan="3">
+       <widget class="QLineEdit" name="modelName"/>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="refFid">
+        <property name="text">
+         <string>Ref Fid</string>
         </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="inputFid">
+        <property name="text">
+         <string>Input Fid</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1" colspan="3">
+       <widget class="qMRMLNodeComboBox" name="qMRMLVolumeNodeComboBox">
         <property name="nodeTypes">
          <stringlist>
-          <string>vtkMRMLMarkupsFiducialNode</string>
+          <string>vtkMRMLVolumeNode</string>
          </stringlist>
         </property>
        </widget>
@@ -204,54 +192,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>ctScanButton</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>qSlicerLandmarkSegmentationModuleWidget</receiver>
-   <slot>setCTscan()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>126</x>
-     <y>123</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>3</x>
-     <y>96</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>inputFidButton</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>qSlicerLandmarkSegmentationModuleWidget</receiver>
-   <slot>setInputFid()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>186</x>
-     <y>148</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>5</x>
-     <y>138</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>refFidButton</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>qSlicerLandmarkSegmentationModuleWidget</receiver>
-   <slot>setRefFid()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>133</x>
-     <y>189</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>2</x>
-     <y>170</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>applyButton</sender>
    <signal>clicked(bool)</signal>
    <receiver>qSlicerLandmarkSegmentationModuleWidget</receiver>
@@ -278,8 +218,56 @@
      <y>336</y>
     </hint>
     <hint type="destinationlabel">
-     <x>191</x>
-     <y>250</y>
+     <x>304</x>
+     <y>181</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qSlicerLandmarkSegmentationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>qMRMLMarkupsNodeComboBox</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>151</x>
+     <y>359</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>181</x>
+     <y>170</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qSlicerLandmarkSegmentationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>qMRMLRefMarkupsNodeComboBox</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>370</x>
+     <y>362</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>371</x>
+     <y>207</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qSlicerLandmarkSegmentationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>qMRMLVolumeNodeComboBox</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>91</x>
+     <y>349</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>125</x>
+     <y>135</y>
     </hint>
    </hints>
   </connection>

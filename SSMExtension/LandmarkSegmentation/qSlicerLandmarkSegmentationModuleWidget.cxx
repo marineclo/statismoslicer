@@ -52,6 +52,10 @@
 #include "itkPointsLocator.h"
 #include <itkTransformFileWriter.h>
 #include <itkTransformFileReader.h>
+//#include <vtkImageToImageFilter.h>
+#include <itkVTKImageImport.h>
+#include <vtkImageExport.h>
+#include <vtkImageData.h>
 
 // convert itk Mesh to vtk PolyData
 #include "vtkPolyData.h"
@@ -70,14 +74,15 @@
 #include "vtkMRMLModelDisplayNode.h"
 #include "vtkMRMLScene.h"
 #include "vtkMRMLMarkupsFiducialNode.h"
+#include "vtkMRMLVolumeNode.h"
 
 const unsigned Dimensions = 3;
 typedef itk::Mesh<float, Dimensions  > MeshType;
 typedef itk::Point<double, 3> PointType;
-typedef itk::Image<float, Dimensions> CTImageType;
+typedef itk::Image<int, Dimensions> CTImageType;
 typedef itk::Image<float, Dimensions> DistanceImageType;
 typedef itk::ImageFileReader<CTImageType> CTImageReaderType;
-typedef itk::ImageFileWriter<DistanceImageType> DistanceImageWriterType;
+typedef itk::ImageFileWriter<CTImageType> DistanceImageWriterType;
 typedef itk::MeshRepresenter<float, Dimensions> RepresenterType;
 typedef itk::MeshFileReader<MeshType> MeshReaderType;
 typedef itk::MeshFileWriter<MeshType> MeshWriterType;
@@ -292,11 +297,13 @@ class qSlicerLandmarkSegmentationModuleWidgetPrivate: public Ui_qSlicerLandmarkS
 public:
   qSlicerLandmarkSegmentationModuleWidgetPrivate();
   
-  std::vector<PointType > readLandmarks(const std::string& filename);
+  std::vector<PointType > readLandmarks(vtkMRMLMarkupsFiducialNode* markupsNode);
   StatisticalModelType::Pointer computePartiallyFixedModel(const RigidTransformType* rigidTransform, const StatisticalModelType* statisticalModel,
 const  std::vector<PointType >& modelLandmarks,const  std::vector<PointType >& targetLandmarks, double variance);
 
   vtkPolyData* convertMeshToVtk(MeshType::Pointer meshToConvert, vtkPolyData *  m_PolyDataReturn);
+  
+  void ConnectVTKToITK(vtkImageExport* in, itk::VTKImageImport<CTImageType>* out, vtkMRMLVolumeNode* volumeNode);
 };
 
 //-----------------------------------------------------------------------------
@@ -308,45 +315,32 @@ qSlicerLandmarkSegmentationModuleWidgetPrivate::qSlicerLandmarkSegmentationModul
 }
 
 /**
-* read landmarks from the given file in slicer fcsv formant and return them as a list.
+* read landmarks from Slicer list and return them as a list.
 *
 * The format is: label,x,y,z
 *
-* @param filename the filename
+* @param Markups Node
 * @returns A list of itk points
 */
-std::vector<PointType > qSlicerLandmarkSegmentationModuleWidgetPrivate::readLandmarks(const std::string& filename) {
+std::vector<PointType > qSlicerLandmarkSegmentationModuleWidgetPrivate::readLandmarks(vtkMRMLMarkupsFiducialNode* markupsNode) {
 
   std::vector<PointType> ptList;
 
-  std::fstream file ( filename.c_str() );
-  if (!file) {
-    std::cout << "could not read landmark file " << std::endl;
-	throw std::runtime_error("could not read landmark file ");
-  }
-  std::string line;
-  while (  std::getline ( file, line))
-  {
-    if (line.length() > 0 && line[0] == '#')
-        continue;
+  for (int i=0;i<markupsNode->GetNumberOfFiducials();i++){
+      double pos[3];
+      markupsNode->GetNthFiducialPosition(i,pos);
+      PointType pt;
+      pt[0] = -pos[0];
+      pt[1] = -pos[1];
+      pt[2] = pos[2];
+      ptList.push_back(pt);
+      std::cout<<"pt[0]= "<<pt[0]<<" pt[1]= "<<pt[1]<<" pt[2]= "<<pt[2]<<std::endl;
+    }
 
-    std::istringstream strstr(line);
-    std::string token;
-    std::getline(strstr, token, ','); // ignore the label
-    std::getline(strstr, token, ','); // get the x coord
-    double pt0 = -atof(token.c_str());
-    std::getline(strstr, token, ','); // get the y coord
-    double pt1 = -atof(token.c_str());
-    std::getline(strstr, token, ','); // get the z coord
-    double pt2 = atof(token.c_str());
-    PointType pt;
-    pt[0] = pt0; pt[1] = pt1; pt[2] = pt2;
-    ptList.push_back(pt);
-  }
   return ptList;
 }
 
-// Returns a new model, that is restricted to go through the proints specified in targetLandmarks..
+// Returns a new model, that is restricted to go through the points specified in targetLandmarks..
 //
 StatisticalModelType::Pointer qSlicerLandmarkSegmentationModuleWidgetPrivate::computePartiallyFixedModel(const RigidTransformType* rigidTransform, const StatisticalModelType* statisticalModel,
 const  std::vector<PointType >& modelLandmarks,const  std::vector<PointType >& targetLandmarks, double variance)
@@ -470,6 +464,25 @@ vtkPolyData* qSlicerLandmarkSegmentationModuleWidgetPrivate::convertMeshToVtk(Me
   return m_PolyDataReturn;
 }
 
+void qSlicerLandmarkSegmentationModuleWidgetPrivate::ConnectVTKToITK(vtkImageExport* in, itk::VTKImageImport<CTImageType>* out, vtkMRMLVolumeNode* volumeNode){
+  
+  out->SetUpdateInformationCallback(in->GetUpdateInformationCallback());
+  out->SetPipelineModifiedCallback(in->GetPipelineModifiedCallback());
+  out->SetWholeExtentCallback(in->GetWholeExtentCallback());
+  out->SetSpacingCallback(in->GetSpacingCallback());
+  out->SetOriginCallback(in->GetOriginCallback());
+  //out->SetSpacingCallback(volumeNode->GetSpacing());
+  //out->SetOriginCallback(volumeNode->GetOrigin());
+  out->SetScalarTypeCallback(in->GetScalarTypeCallback());
+  out->SetNumberOfComponentsCallback(in->GetNumberOfComponentsCallback());
+  out->SetPropagateUpdateExtentCallback(in->GetPropagateUpdateExtentCallback());
+  out->SetUpdateDataCallback(in->GetUpdateDataCallback());
+  out->SetDataExtentCallback(in->GetDataExtentCallback());
+  out->SetBufferPointerCallback(in->GetBufferPointerCallback());
+  out->SetCallbackUserData(in->GetCallbackUserData());
+
+}
+
 //-----------------------------------------------------------------------------
 // qSlicerLandmarkSegmentationModuleWidget methods
 
@@ -499,52 +512,62 @@ void qSlicerLandmarkSegmentationModuleWidget::setMRMLScene(vtkMRMLScene* mrmlSce
   this->qSlicerAbstractModuleWidget::setMRMLScene(mrmlScene);
 }
 
-void qSlicerLandmarkSegmentationModuleWidget::setRefFid(){
-
-  Q_D(qSlicerLandmarkSegmentationModuleWidget);
-  QString inputFile = QFileDialog::getOpenFileName(this, "Select Reference Fiducial", QString());
-  d->fixedLandmarksName->setText(inputFile);
-}
-
 void qSlicerLandmarkSegmentationModuleWidget::setModel(){
   Q_D(qSlicerLandmarkSegmentationModuleWidget);
   QString inputFile = QFileDialog::getOpenFileName(this, "Select model", QString());
   d->modelName->setText(inputFile);
 }
 
-void qSlicerLandmarkSegmentationModuleWidget::setInputFid(){
-  Q_D(qSlicerLandmarkSegmentationModuleWidget);
-  QString inputFile = QFileDialog::getOpenFileName(this, "Select Input Fiducial", QString());
-  d->movingLandmarksName->setText(inputFile);
-}
-
-void qSlicerLandmarkSegmentationModuleWidget::setCTscan(){
+/*void qSlicerLandmarkSegmentationModuleWidget::setCTscan(){
   Q_D(qSlicerLandmarkSegmentationModuleWidget);
   QString inputFile = QFileDialog::getOpenFileName(this, "Select CT scan", QString());
   d->targetName->setText(inputFile);
-}
+}*/
 
 
 void qSlicerLandmarkSegmentationModuleWidget::apply(){
   Q_D(qSlicerLandmarkSegmentationModuleWidget);
+  
+  vtkMRMLVolumeNode* volumeNode = vtkMRMLVolumeNode::SafeDownCast(d->qMRMLVolumeNodeComboBox->currentNode());
+  vtkImageData* vtkImage = volumeNode->GetImageData();
+  
+  //vtkImageDataInput->SetScalarTypeToFloat();
+  double pt[3];
+  double pt1[3];
+  volumeNode->GetSpacing(pt);
+  volumeNode->GetOrigin(pt1);
+  vtkImageData* vtkImageDataInput = vtkImageData::New();
+  vtkImageDataInput->DeepCopy(vtkImage);
+  vtkImageDataInput->SetSpacing(pt);
+  vtkImageDataInput->SetOrigin(pt1);
+  
+  typedef itk::VTKImageImport<CTImageType> InputImageImportType;
+  vtkImageExport* inputImageExporter = vtkImageExport::New();
+  inputImageExporter->SetInput(vtkImageDataInput);
+  InputImageImportType::Pointer inputImageImporter = InputImageImportType::New();
 
-  std::vector<PointType> ptList;
-  vtkMRMLMarkupsFiducialNode* markupsNode =  d->qMRMLMarkupsNodeComboBox->currentNodeID();
-  for (int i=0;i<markupsNode->GetNumberOfFiducials();i++){
-      double pos[3];
-      markupsNode->GetNthFiducialPosition(i,pos);
-      pos[0] = -pos[0];
-      pos[1] = -pos[1];
-      ptList.push_back(pt);
-      std::cout<<"pt[0]= "<<pos[0]<<" pt[1]= "<<pos[1]<<" pt[2]= "<<pos[2]<<std::endl;
-    }
-
- /*
+  d->ConnectVTKToITK(inputImageExporter, inputImageImporter, volumeNode);
+  CTImageType* ctImage = const_cast<CTImageType*>(inputImageImporter->GetOutput());
+  ctImage->Update();
+  
+ /* DistanceImageWriterType::Pointer targetWriter = DistanceImageWriterType::New();
+  targetWriter->SetFileName("/tmp/volume.nrrd");
+  targetWriter->SetInput(ctImage);
+  targetWriter->Update();*/
+  
+  
+  
+  /*typedef itk::VTKImageToImageFilter<CTImageType> VTKImageToImageType;
+  VTKImageToImageType::Pointer vtkImageToImageFilter = VTKImageToImageType::New();
+  vtkImageToImageFilter->SetInput(vtkImageDataInput);
+  vtkImageToImageFilter->Update();
+  CTImageType::Pointer ctImage = vtkImageToImageFilter->GetOutput();*/
+  
   // load the image to which we will fit
-  CTImageReaderType::Pointer targetReader = CTImageReaderType::New();
+  /*CTImageReaderType::Pointer targetReader = CTImageReaderType::New();
   targetReader->SetFileName(d->targetName->text().toStdString().c_str());
   targetReader->Update();
-  CTImageType::Pointer ctImage = targetReader->GetOutput();
+  CTImageType::Pointer ctImage = targetReader->GetOutput();*/
 
   // We compute a binary threshold of input image to get a rough segmentation of the bony structure.
   // Then we compute a distance transform of the segmentation, which we then use for the fitting
@@ -559,8 +582,10 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   DistanceImageType::Pointer distanceImage = dm->GetOutput();
 
   // read the landmarks
-  std::vector<PointType> fixedLandmarks = d->readLandmarks(d->fixedLandmarksName->text().toStdString().c_str());
-  std::vector<PointType> movingLandmarks = d->readLandmarks(d->movingLandmarksName->text().toStdString().c_str());
+  vtkMRMLMarkupsFiducialNode* movingMarkupsNode =  vtkMRMLMarkupsFiducialNode::SafeDownCast(d->qMRMLMarkupsNodeComboBox->currentNode());
+  vtkMRMLMarkupsFiducialNode* fixedMarkupsNode =  vtkMRMLMarkupsFiducialNode::SafeDownCast(d->qMRMLRefMarkupsNodeComboBox->currentNode());
+  std::vector<PointType> fixedLandmarks = d->readLandmarks(fixedMarkupsNode);
+  std::vector<PointType> movingLandmarks = d->readLandmarks(movingMarkupsNode);
 
   // initialize the rigid transform
   RigidTransformType::Pointer rigidTransform = RigidTransformType::New();
@@ -667,5 +692,5 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   this->mrmlScene()->AddNode(meanNode.GetPointer());
   
   outputPolyData->Delete();
-        */
+      
 }

@@ -39,10 +39,8 @@ public:
   virtual ~qSlicerLandmarkSegmentationModuleWidget();
 
 public slots:
-  void setRefFid();
   void setModel();
-  void setInputFid();
-  void setCTscan();
+  //void setCTscan();
   void apply();
 
 
