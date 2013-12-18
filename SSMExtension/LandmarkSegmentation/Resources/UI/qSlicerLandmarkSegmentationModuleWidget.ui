@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>527</width>
-    <height>402</height>
+    <height>474</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -148,6 +148,67 @@
     </widget>
    </item>
    <item>
+    <widget class="ctkCollapsibleButton" name="CollapsibleButton">
+     <property name="text">
+      <string>Compare PolyData</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout2">
+      <property name="margin">
+       <number>0</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="inputPolyData">
+        <property name="text">
+         <string>Input PolyData 1</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="InputPolyData2">
+        <property name="text">
+         <string>Input PolyData 2</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="OutputLabel">
+        <property name="text">
+         <string>Output PolyData</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1" colspan="2">
+       <widget class="QPushButton" name="ComparePushButton">
+        <property name="text">
+         <string>Compare</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="qMRMLNodeComboBox" name="qMRMLModel1NodeComboBox">
+        <property name="nodeTypes">
+         <stringlist>
+          <string>vtkMRMLModelNode</string>
+         </stringlist>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="qMRMLNodeComboBox" name="qMRMLModel2NodeComboBox">
+        <property name="nodeTypes">
+         <stringlist>
+          <string>vtkMRMLModelNode</string>
+         </stringlist>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="outputPolyDataName"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -207,8 +268,8 @@
    <slot>apply()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>182</x>
-     <y>313</y>
+     <x>292</x>
+     <y>296</y>
     </hint>
     <hint type="destinationlabel">
      <x>11</x>
@@ -227,8 +288,8 @@
      <y>336</y>
     </hint>
     <hint type="destinationlabel">
-     <x>304</x>
-     <y>181</y>
+     <x>414</x>
+     <y>164</y>
     </hint>
    </hints>
   </connection>
@@ -243,8 +304,8 @@
      <y>359</y>
     </hint>
     <hint type="destinationlabel">
-     <x>181</x>
-     <y>170</y>
+     <x>291</x>
+     <y>164</y>
     </hint>
    </hints>
   </connection>
@@ -259,8 +320,8 @@
      <y>362</y>
     </hint>
     <hint type="destinationlabel">
-     <x>371</x>
-     <y>207</y>
+     <x>481</x>
+     <y>197</y>
     </hint>
    </hints>
   </connection>
@@ -275,8 +336,72 @@
      <y>349</y>
     </hint>
     <hint type="destinationlabel">
-     <x>125</x>
-     <y>135</y>
+     <x>235</x>
+     <y>131</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qSlicerLandmarkSegmentationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>qMRMLModelNodeComboBox</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>197</x>
+     <y>394</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>182</x>
+     <y>85</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qSlicerLandmarkSegmentationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>qMRMLModel2NodeComboBox</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>120</x>
+     <y>462</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>385</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>qSlicerLandmarkSegmentationModuleWidget</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>qMRMLModel1NodeComboBox</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>523</x>
+     <y>296</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>496</x>
+     <y>357</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>ComparePushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>qSlicerLandmarkSegmentationModuleWidget</receiver>
+   <slot>comparePolyData()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>193</x>
+     <y>452</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>199</x>
+     <y>464</y>
     </hint>
    </hints>
   </connection>
@@ -287,5 +412,6 @@
   <slot>setInputFid()</slot>
   <slot>setRefFid()</slot>
   <slot>apply()</slot>
+  <slot>comparePolyData()</slot>
  </slots>
 </ui>

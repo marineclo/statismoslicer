@@ -67,6 +67,13 @@
 #include "itkPoint.h"
 #include "itkObject.h"
 #include <vtkSmartPointer.h>
+#include "vtkCollection.h"
+
+//Compare PolyData
+#include "vtkPointLocator.h"
+#include "vtkMath.h"
+#include "vtkFloatArray.h"
+#include "vtkPointData.h"
 
 //MRML includes
 #include <vtkNew.h>
@@ -76,9 +83,12 @@
 #include "vtkMRMLMarkupsFiducialNode.h"
 #include "vtkMRMLVolumeNode.h"
 
+#include "qSlicerApplication.h"
+
 const unsigned Dimensions = 3;
 typedef itk::Mesh<float, Dimensions  > MeshType;
 typedef itk::Point<double, 3> PointType;
+typedef itk::PointSet<float, Dimensions > PointSetType;
 typedef itk::Image<int, Dimensions> CTImageType;
 typedef itk::Image<float, Dimensions> DistanceImageType;
 typedef itk::ImageFileReader<CTImageType> CTImageReaderType;
@@ -88,10 +98,12 @@ typedef itk::MeshFileReader<MeshType> MeshReaderType;
 typedef itk::MeshFileWriter<MeshType> MeshWriterType;
 typedef itk::Image< itk::CovariantVector<float, Dimensions>, Dimensions >   GradientImageType;
 //typedef itk::MeanSquaresPointSetToImageMetric<MeshType, DistanceImageType> MetricType;
-typedef itk::PenalizingMeanSquaresPointSetToImageMetric<MeshType, DistanceImageType> MetricType;
+//typedef itk::PenalizingMeanSquaresPointSetToImageMetric<MeshType, DistanceImageType> MetricType;
+typedef itk::PenalizingMeanSquaresPointSetToImageMetric<PointSetType, DistanceImageType> MetricType;
 typedef itk::StatisticalShapeModelTransform<RepresenterType, double, Dimensions> StatisticalModelTransformType;
 typedef itk::StatisticalModel<RepresenterType> StatisticalModelType;
-typedef itk::PointSetToImageRegistrationMethod<MeshType, DistanceImageType> RegistrationFilterType;
+//typedef itk::PointSetToImageRegistrationMethod<MeshType, DistanceImageType> RegistrationFilterType;
+typedef itk::PointSetToImageRegistrationMethod<PointSetType, DistanceImageType> RegistrationFilterType;
 typedef itk::LBFGSOptimizer OptimizerType;
 typedef itk::LinearInterpolateImageFunction<DistanceImageType, double> InterpolatorType;
 typedef itk::BinaryThresholdImageFilter <CTImageType, CTImageType>  BinaryThresholdImageFilterType;
@@ -128,11 +140,12 @@ public:
   typedef itk::CompositeTransform<double, 3> CompositeTransformType;
   //typedef const CompositeTransformType   *CompositeTransformPointer;
 
-  void SetParameters(StatisticalModelType::Pointer model, StatisticalModelType::Pointer constraintModel, RigidTransformType::Pointer rigidTransform, vtkMRMLScene* scene){
+  void SetParameters(StatisticalModelType::Pointer model, StatisticalModelType::Pointer constraintModel, RigidTransformType::Pointer rigidTransform, vtkMRMLScene* scene, vtkMRMLModelNode* modelNode){
     m_model = model;
     m_constraintModel = constraintModel;
     m_rigidTransform = rigidTransform;
     m_scene = scene;
+    m_modelNode = modelNode;
   }
 
   vtkPolyData* convertMeshToVtk(MeshType::Pointer meshToConvert, vtkPolyData *  m_PolyDataReturn)
@@ -257,17 +270,46 @@ public:
 
     vtkPolyData* outputPolyData = vtkPolyData::New();
     outputPolyData=convertMeshToVtk(transformMeshFilter->GetOutput(), outputPolyData);
+    vtkSmartPointer< vtkPoints >   point = vtkSmartPointer< vtkPoints >::New();
+    point->SetNumberOfPoints(outputPolyData->GetNumberOfPoints());
+    for (vtkIdType i=0; i<outputPolyData->GetNumberOfPoints(); i++){
+        double pt[3];
+        outputPolyData->GetPoint(i,pt);
+        pt[0] = -pt[0];
+        pt[1] = -pt[1];
+        pt[2] = pt[2];
+        point->SetPoint(i,pt);
+      }
+    outputPolyData->SetPoints(point);
+
+   if (m_iter_no>1){
+      vtkSmartPointer<vtkCollection> modelDisplayNodes = vtkSmartPointer<vtkCollection>::Take( m_scene->GetNodesByClass("vtkMRMLModelDisplayNode") );
+      std::cout<<"Nb Collection= "<<modelDisplayNodes->GetNumberOfItems ()<<std::endl;
+      vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (modelDisplayNodes->GetNumberOfItems ()-1));
+      modelViewNode->VisibilityOff();
+    }
+
 
     //Add to the scene
     vtkNew<vtkMRMLModelDisplayNode> modelDisplayNode;
     m_scene->AddNode(modelDisplayNode.GetPointer());
 
     QString outputModelName = "OutputModelSeg" +QString::number(m_iter_no);
+
+   /* m_modelNode->SetAndObservePolyData(outputPolyData);
+    m_modelNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
+    m_modelNode->SetName(outputModelName.toStdString().c_str());
+    m_modelNode->Modified();*/
+
     vtkNew<vtkMRMLModelNode> meanNode;
     meanNode->SetAndObservePolyData(outputPolyData);
     meanNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
     meanNode->SetName(outputModelName.toStdString().c_str());
     m_scene->AddNode(meanNode.GetPointer());
+
+    qSlicerApplication * app = qSlicerApplication::application();
+    app->processEvents();
+
 
     outputPolyData->Delete();
   }
@@ -283,6 +325,7 @@ protected:
   StatisticalModelType::Pointer m_constraintModel;
   RigidTransformType::Pointer m_rigidTransform;
   vtkMRMLScene* m_scene;
+  vtkMRMLModelNode* m_modelNode;
 
 private:
   int m_iter_no;
@@ -303,7 +346,7 @@ const  std::vector<PointType >& modelLandmarks,const  std::vector<PointType >& t
 
   vtkPolyData* convertMeshToVtk(MeshType::Pointer meshToConvert, vtkPolyData *  m_PolyDataReturn);
   
-  void ConnectVTKToITK(vtkImageExport* in, itk::VTKImageImport<CTImageType>* out, vtkMRMLVolumeNode* volumeNode);
+  void ConnectVTKToITK(vtkImageExport* in, itk::VTKImageImport<CTImageType>* out);
 };
 
 //-----------------------------------------------------------------------------
@@ -334,7 +377,7 @@ std::vector<PointType > qSlicerLandmarkSegmentationModuleWidgetPrivate::readLand
       pt[1] = -pos[1];
       pt[2] = pos[2];
       ptList.push_back(pt);
-      std::cout<<"pt[0]= "<<pt[0]<<" pt[1]= "<<pt[1]<<" pt[2]= "<<pt[2]<<std::endl;
+      //std::cout<<"pt[0]= "<<pt[0]<<" pt[1]= "<<pt[1]<<" pt[2]= "<<pt[2]<<std::endl;
     }
 
   return ptList;
@@ -464,15 +507,13 @@ vtkPolyData* qSlicerLandmarkSegmentationModuleWidgetPrivate::convertMeshToVtk(Me
   return m_PolyDataReturn;
 }
 
-void qSlicerLandmarkSegmentationModuleWidgetPrivate::ConnectVTKToITK(vtkImageExport* in, itk::VTKImageImport<CTImageType>* out, vtkMRMLVolumeNode* volumeNode){
+void qSlicerLandmarkSegmentationModuleWidgetPrivate::ConnectVTKToITK(vtkImageExport* in, itk::VTKImageImport<CTImageType>* out){
   
   out->SetUpdateInformationCallback(in->GetUpdateInformationCallback());
   out->SetPipelineModifiedCallback(in->GetPipelineModifiedCallback());
   out->SetWholeExtentCallback(in->GetWholeExtentCallback());
   out->SetSpacingCallback(in->GetSpacingCallback());
   out->SetOriginCallback(in->GetOriginCallback());
-  //out->SetSpacingCallback(volumeNode->GetSpacing());
-  //out->SetOriginCallback(volumeNode->GetOrigin());
   out->SetScalarTypeCallback(in->GetScalarTypeCallback());
   out->SetNumberOfComponentsCallback(in->GetNumberOfComponentsCallback());
   out->SetPropagateUpdateExtentCallback(in->GetPropagateUpdateExtentCallback());
@@ -546,7 +587,7 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   inputImageExporter->SetInput(vtkImageDataInput);
   InputImageImportType::Pointer inputImageImporter = InputImageImportType::New();
 
-  d->ConnectVTKToITK(inputImageExporter, inputImageImporter, volumeNode);
+  d->ConnectVTKToITK(inputImageExporter, inputImageImporter);
   CTImageType* ctImage = const_cast<CTImageType*>(inputImageImporter->GetOutput());
   ctImage->Update();
   
@@ -555,13 +596,6 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   targetWriter->SetInput(ctImage);
   targetWriter->Update();*/
   
-  
-  
-  /*typedef itk::VTKImageToImageFilter<CTImageType> VTKImageToImageType;
-  VTKImageToImageType::Pointer vtkImageToImageFilter = VTKImageToImageType::New();
-  vtkImageToImageFilter->SetInput(vtkImageDataInput);
-  vtkImageToImageFilter->Update();
-  CTImageType::Pointer ctImage = vtkImageToImageFilter->GetOutput();*/
   
   // load the image to which we will fit
   /*CTImageReaderType::Pointer targetReader = CTImageReaderType::New();
@@ -644,7 +678,8 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   ObserverType::Pointer observer = ObserverType::New();
   optimizer->AddObserver( itk::IterationEvent(), observer );
 
-  observer->SetParameters(model, constraintModel, rigidTransform, this->mrmlScene());
+  vtkMRMLModelNode* modelNode = vtkMRMLModelNode::SafeDownCast(d->qMRMLModelNodeComboBox->currentNode());
+  observer->SetParameters(model, constraintModel, rigidTransform, this->mrmlScene(),modelNode);
 
   // set up the metric and interpolators
   MetricType::Pointer metric = MetricType::New();
@@ -662,7 +697,19 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
 
   // the input to the registration will be the reference of the statistical model and the
   // distance map we computed above.
-  registration->SetFixedPointSet(  model->GetRepresenter()->GetReference() );
+
+  // we create the fixedPointSet of the registration from the reference mesh of our model.
+  // As we are fitting to the 0 level set of a distance image, we set the value of the pointdata to 0.
+  PointSetType::Pointer fixedPointSet = PointSetType::New();
+  fixedPointSet->SetPoints(model->GetRepresenter()->GetReference()->GetPoints());
+  PointSetType::PointDataContainer::Pointer points = PointSetType::PointDataContainer::New();
+  points->Reserve(model->GetRepresenter()->GetReference()->GetNumberOfPoints());
+  for (PointSetType::PointDataContainer::Iterator it = points->Begin(); it != points->End(); ++it) {
+      it->Value() = 0;
+  }
+  fixedPointSet->SetPointData(points);
+  registration->SetFixedPointSet(  fixedPointSet);
+  //registration->SetFixedPointSet(  model->GetRepresenter()->GetReference() );
   registration->SetMovingImage(distanceImage);
 
   try {
@@ -693,4 +740,73 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   
   outputPolyData->Delete();
       
+}
+
+//-----------------------------------------------------------------------------
+void qSlicerLandmarkSegmentationModuleWidget::comparePolyData()
+{
+  Q_D(qSlicerLandmarkSegmentationModuleWidget);
+
+  vtkMRMLModelNode* model1Node = vtkMRMLModelNode::SafeDownCast(d->qMRMLModel1NodeComboBox->currentNode());
+  vtkMRMLModelNode* model2Node = vtkMRMLModelNode::SafeDownCast(d->qMRMLModel2NodeComboBox->currentNode());
+  vtkSmartPointer< vtkPolyData > polyData1 = model1Node->GetPolyData();
+  vtkSmartPointer< vtkPolyData > polyData2 = model2Node->GetPolyData();
+
+  vtkSmartPointer<vtkPointLocator> pointLocator2 = vtkSmartPointer<vtkPointLocator>::New();
+  pointLocator2->SetDataSet(polyData2);
+
+  vtkSmartPointer<vtkFloatArray> scalars = vtkSmartPointer<vtkFloatArray>::New();
+  scalars->SetNumberOfComponents(1);
+  scalars->Allocate(polyData1->GetNumberOfPoints(),1000);
+
+  for (vtkIdType i=0; i<polyData1->GetNumberOfPoints(); i++){
+      double Xi[3];
+      polyData1->GetPoint(i,Xi);
+      double Yid[3];
+      int ptLocatorId = pointLocator2->FindClosestPoint(Xi);
+      polyData2->GetPoint(ptLocatorId,Yid);
+      double distance = sqrt(vtkMath::Distance2BetweenPoints(Xi,Yid));
+      scalars->InsertTuple1(i,distance);
+    }
+
+  vtkSmartPointer<vtkPointLocator> pointLocator1 = vtkSmartPointer<vtkPointLocator>::New();
+  pointLocator1->SetDataSet(polyData1);
+
+  for (vtkIdType i=0; i<polyData2->GetNumberOfPoints(); i++){
+      double Yi[3];
+      polyData2->GetPoint(i,Yi);
+      double Xid[3];
+      vtkIdType ptLocatorId = pointLocator1->FindClosestPoint(Yi);
+      polyData1->GetPoint(ptLocatorId,Xid);
+      double distance = sqrt(vtkMath::Distance2BetweenPoints(Yi,Xid));
+      double xdistance = scalars->GetTuple1(ptLocatorId);
+      if (distance>xdistance){
+          scalars->SetTuple1(ptLocatorId,distance);
+        }
+    }
+
+
+  vtkSmartPointer< vtkPolyData > polyData3 = vtkSmartPointer< vtkPolyData >::New();
+  polyData3->DeepCopy(polyData1);
+  polyData3->GetPointData()->SetScalars(scalars);
+  scalars->SetName("scalarsDis");
+  double rangeScalars[2];
+  scalars->GetRange(rangeScalars);
+  std::cout<<"min= "<<rangeScalars[0]<<" max = "<<rangeScalars[1]<<std::endl;
+
+  // Add polydata to the scene
+  vtkNew<vtkMRMLModelDisplayNode> sampleDisplayNode;
+  sampleDisplayNode->SetScalarVisibility(true);
+  sampleDisplayNode->SetActiveScalarName(scalars->GetName());
+  sampleDisplayNode->SetAutoScalarRange(true);
+  sampleDisplayNode->SetAndObserveColorNodeID("vtkMRMLColorTableNodeWarm1");
+  this->mrmlScene()->AddNode(sampleDisplayNode.GetPointer());
+
+  vtkNew<vtkMRMLModelNode> sampleNode;
+  sampleNode->SetAndObservePolyData(polyData3);
+  sampleNode->SetAndObserveDisplayNodeID(sampleDisplayNode->GetID());
+
+  sampleNode->SetName(d->outputPolyDataName->text().toStdString().c_str());
+  this->mrmlScene()->AddNode(sampleNode.GetPointer());
+
 }

@@ -42,6 +42,7 @@ public slots:
   void setModel();
   //void setCTscan();
   void apply();
+  void comparePolyData();
 
 
 protected:
