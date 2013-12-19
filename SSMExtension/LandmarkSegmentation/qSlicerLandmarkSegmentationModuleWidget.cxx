@@ -89,7 +89,7 @@ const unsigned Dimensions = 3;
 typedef itk::Mesh<float, Dimensions  > MeshType;
 typedef itk::Point<double, 3> PointType;
 typedef itk::PointSet<float, Dimensions > PointSetType;
-typedef itk::Image<int, Dimensions> CTImageType;
+typedef itk::Image<float, Dimensions> CTImageType;
 typedef itk::Image<float, Dimensions> DistanceImageType;
 typedef itk::ImageFileReader<CTImageType> CTImageReaderType;
 typedef itk::ImageFileWriter<CTImageType> DistanceImageWriterType;
@@ -284,7 +284,7 @@ public:
 
    if (m_iter_no>1){
       vtkSmartPointer<vtkCollection> modelDisplayNodes = vtkSmartPointer<vtkCollection>::Take( m_scene->GetNodesByClass("vtkMRMLModelDisplayNode") );
-      std::cout<<"Nb Collection= "<<modelDisplayNodes->GetNumberOfItems ()<<std::endl;
+      //std::cout<<"Nb Collection= "<<modelDisplayNodes->GetNumberOfItems ()<<std::endl;
       vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (modelDisplayNodes->GetNumberOfItems ()-1));
       modelViewNode->VisibilityOff();
     }
@@ -569,7 +569,7 @@ void qSlicerLandmarkSegmentationModuleWidget::setModel(){
 void qSlicerLandmarkSegmentationModuleWidget::apply(){
   Q_D(qSlicerLandmarkSegmentationModuleWidget);
   
-  vtkMRMLVolumeNode* volumeNode = vtkMRMLVolumeNode::SafeDownCast(d->qMRMLVolumeNodeComboBox->currentNode());
+  /*vtkMRMLVolumeNode* volumeNode = vtkMRMLVolumeNode::SafeDownCast(d->qMRMLVolumeNodeComboBox->currentNode());
   vtkImageData* vtkImage = volumeNode->GetImageData();
   
   //vtkImageDataInput->SetScalarTypeToFloat();
@@ -589,23 +589,23 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
 
   d->ConnectVTKToITK(inputImageExporter, inputImageImporter);
   CTImageType* ctImage = const_cast<CTImageType*>(inputImageImporter->GetOutput());
-  ctImage->Update();
+  ctImage->Update();*/
   
- /* DistanceImageWriterType::Pointer targetWriter = DistanceImageWriterType::New();
+  /*DistanceImageWriterType::Pointer targetWriter = DistanceImageWriterType::New();
   targetWriter->SetFileName("/tmp/volume.nrrd");
   targetWriter->SetInput(ctImage);
   targetWriter->Update();*/
   
   
   // load the image to which we will fit
-  /*CTImageReaderType::Pointer targetReader = CTImageReaderType::New();
-  targetReader->SetFileName(d->targetName->text().toStdString().c_str());
+  CTImageReaderType::Pointer targetReader = CTImageReaderType::New();
+  targetReader->SetFileName("/Volumes/MYPASSPORT/TestSegmentation/data136DistanceMap.nrrd");
   targetReader->Update();
-  CTImageType::Pointer ctImage = targetReader->GetOutput();*/
+  CTImageType::Pointer distanceImage = targetReader->GetOutput();
 
   // We compute a binary threshold of input image to get a rough segmentation of the bony structure.
   // Then we compute a distance transform of the segmentation, which we then use for the fitting
-  BinaryThresholdImageFilterType::Pointer thresholdFilter = BinaryThresholdImageFilterType::New();
+  /*BinaryThresholdImageFilterType::Pointer thresholdFilter = BinaryThresholdImageFilterType::New();
   thresholdFilter->SetInput(ctImage);
   thresholdFilter->SetLowerThreshold( d->threshold->text().toFloat() );
   CTImageType::Pointer thresholdImage = thresholdFilter->GetOutput();
@@ -613,8 +613,12 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   DistanceMapImageFilterType::Pointer dm = DistanceMapImageFilterType::New();
   dm->SetInput(thresholdImage);
   dm->Update();
-  DistanceImageType::Pointer distanceImage = dm->GetOutput();
+  DistanceImageType::Pointer distanceImage = dm->GetOutput();*/
 
+  // load the model create a shape model transform with it
+  StatisticalModelType::Pointer model = StatisticalModelType::New();
+  model->Load(d->modelName->text().toStdString().c_str());
+  
   // read the landmarks
   vtkMRMLMarkupsFiducialNode* movingMarkupsNode =  vtkMRMLMarkupsFiducialNode::SafeDownCast(d->qMRMLMarkupsNodeComboBox->currentNode());
   vtkMRMLMarkupsFiducialNode* fixedMarkupsNode =  vtkMRMLMarkupsFiducialNode::SafeDownCast(d->qMRMLRefMarkupsNodeComboBox->currentNode());
@@ -628,10 +632,6 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   initializer->SetMovingLandmarks(movingLandmarks);
   initializer->SetTransform(rigidTransform);
   initializer->InitializeTransform();
-
-  // load the model create a shape model transform with it
-  StatisticalModelType::Pointer model = StatisticalModelType::New();
-  model->Load(d->modelName->text().toStdString().c_str());
 
   StatisticalModelType::Pointer constraintModel = d->computePartiallyFixedModel(rigidTransform, model, fixedLandmarks, movingLandmarks, d->lmVariance->text().toDouble());
 
