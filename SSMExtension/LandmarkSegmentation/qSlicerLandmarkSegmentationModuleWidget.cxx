@@ -614,7 +614,10 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   dm->SetInput(thresholdImage);
   dm->Update();
   DistanceImageType::Pointer distanceImage = dm->GetOutput();*/
-
+  
+  clock_t temps;
+  srand(time(NULL));
+  		
   // load the model create a shape model transform with it
   StatisticalModelType::Pointer model = StatisticalModelType::New();
   model->Load(d->modelName->text().toStdString().c_str());
@@ -719,8 +722,11 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   } catch ( itk::ExceptionObject& o ) {
     std::cout << "caught exception " << o << std::endl;
   }
+  
+  temps=clock();
+  std::cout<<"temps = "<<(double) temps/(CLOCKS_PER_SEC*60)<<std::endl;
 
-  TransformMeshFilterType::Pointer transformMeshFilter = TransformMeshFilterType::New();
+  /*TransformMeshFilterType::Pointer transformMeshFilter = TransformMeshFilterType::New();
   transformMeshFilter->SetInput(model->GetRepresenter()->GetReference());
   transformMeshFilter->SetTransform(transform);
   transformMeshFilter->Update();
@@ -738,7 +744,7 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   meanNode->SetName("OutputModelSegFinal");
   this->mrmlScene()->AddNode(meanNode.GetPointer());
   
-  outputPolyData->Delete();
+  outputPolyData->Delete();*/
       
 }
 
