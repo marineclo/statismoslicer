@@ -377,13 +377,13 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
 
   //display Sample name with PC and Std values
   std::ostringstream ssSample;
-  ssSample <<"SamplePc"<<pc<<"Std"<<std;
+  ssSample <<"samplePc"<<pc<<"Std"<<std;
   std::string sampleName = ssSample.str();
 
   //Get the model Display node
   vtkSmartPointer<vtkCollection> modelDisplayNodes = vtkSmartPointer<vtkCollection>::Take( this->mrmlScene()->GetNodesByClass("vtkMRMLModelDisplayNode") );
-  std::cout<<"Nb Collection= "<<modelDisplayNodes->GetNumberOfItems ()<<std::endl;
-
+  vtkSmartPointer<vtkCollection> volumeNodes = vtkSmartPointer<vtkCollection>::Take( this->mrmlScene()->GetNodesByClass("vtkMRMLScalarVolumeNode") );
+  
   if (d->radioButtonVTK->isChecked()){
     int nbPrincipalComponent = vtkModel->GetNumberOfPrincipalComponents();
     VectorType coefficients = VectorType::Zero(nbPrincipalComponent);
@@ -397,25 +397,22 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
     typedef std::vector<std::string>::iterator ItemIterator;
     ItemIterator iter = std::find(nameITK.begin(), nameITK.end(), sampleName); //check if the name already exists
     size_t index = std::distance(nameITK.begin(), iter);
-    std::cout<<"index= "<<index<<std::endl;
-    std::cout<<"indexNode= "<<indexNode<<std::endl;
-    std::cout<<"Name= "<<sampleName<<std::endl;
 
-    if (nameITK.size()!=0){
-      vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (3+indexNode) );
-      modelViewNode->VisibilityOff();
-      std::cout<<"IDmodelOFF= "<<modelViewNode->GetID()<<std::endl;
-    }
-    else{ //just the mean model exist
-      vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (modelDisplayNodes->GetNumberOfItems ()-1) );
-      modelViewNode->VisibilityOff();
-    }
+    //Set visibility off of the previous model
+    vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (3+indexNode) );
+    modelViewNode->VisibilityOff();
 
     if(iter!=nameITK.end()){ //model already exists
       //Set Visibility on of the current model
       vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (3+index) );
       modelViewNode->VisibilityOn();
-      std::cout<<"IDmodelON= "<<modelViewNode->GetID()<<std::endl;
+      //Display the volume in the slice node
+      vtkMRMLScalarVolumeNode* volumeNode = vtkMRMLScalarVolumeNode::SafeDownCast( volumeNodes->GetItemAsObject (index) );
+  	  vtkSlicerApplicationLogic * appLogic = qSlicerCoreApplication::application()->applicationLogic();
+  	  vtkMRMLSelectionNode * selectionNode = appLogic->GetSelectionNode();
+  	  selectionNode->SetReferenceActiveVolumeID(volumeNode->GetID());
+  	  appLogic->PropagateVolumeSelection();
+  	  appLogic->FitSliceToAll();
 
     }else{
       nameITK.push_back(sampleName);
@@ -527,7 +524,6 @@ void qSlicerDisplaySSMModuleWidget::displayModelVolume(vtkPolyData* modelToDispl
   meanNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
   meanNode->SetName(modelName.c_str());
   this->mrmlScene()->AddNode(meanNode.GetPointer());
-  std::cout<<"IDmodel= "<<modelDisplayNode->GetID()<<std::endl;
   
   double spacing[3]; // desired volume spacing
   spacing[0] = 0.24;
@@ -554,6 +550,11 @@ void qSlicerDisplaySSMModuleWidget::displayModelVolume(vtkPolyData* modelToDispl
   matrix->SetElement(0,0,-1);
   matrix->SetElement(1,1,-1);
   
+ //volume name with PC and Std values
+  std::ostringstream ssVolume;
+  ssVolume <<"volumePc"<<d->pcSlider->value()-1<<"Std"<<d->stdSlider->value();
+  std::string volumeName = ssVolume.str();
+  
   //Create a scalar volume node with the created volume
   vtkNew<vtkMRMLScalarVolumeNode> volumeNode;
   volumeNode->SetIJKToRASMatrix(matrix.GetPointer());
@@ -562,6 +563,7 @@ void qSlicerDisplaySSMModuleWidget::displayModelVolume(vtkPolyData* modelToDispl
   volumeNode->SetOrigin(-bounds[0], -bounds[2], bounds[4]); //Compensate Slicer coordinates
   volumeNode->SetSpacing(spacing);
   volumeNode->SetLabelMap(true);
+  volumeNode->SetName(volumeName.c_str());
   this->mrmlScene()->AddNode(volumeNode.GetPointer());
 
   // finally display the volume in the slice node
