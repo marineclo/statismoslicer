@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>550</width>
-    <height>438</height>
+    <height>492</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -121,69 +121,6 @@
     </widget>
    </item>
    <item>
-    <widget class="ctkCollapsibleButton" name="CollapsibleButton">
-     <property name="text">
-      <string>Compare PolyData</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout2">
-      <property name="margin">
-       <number>0</number>
-      </property>
-      <item row="0" column="0">
-       <widget class="QLabel" name="inputPolyData">
-        <property name="text">
-         <string>Input PolyData 1</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="InputPolyData2">
-        <property name="text">
-         <string>Input PolyData 2</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="OutputLabel">
-        <property name="text">
-         <string>Output PolyData</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1" colspan="2">
-       <widget class="QLineEdit" name="outputPolyDataName"/>
-      </item>
-      <item row="4" column="1" colspan="2">
-       <widget class="QPushButton" name="ComparePushButton">
-        <property name="text">
-         <string>Compare</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QPushButton" name="polyData1Button">
-        <property name="text">
-         <string>Input PolyData 1</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QPushButton" name="polyData2Button">
-        <property name="text">
-         <string>Input PolyData 2</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QLineEdit" name="polyData1Name"/>
-      </item>
-      <item row="2" column="2">
-       <widget class="QLineEdit" name="polyData2Name"/>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -280,54 +217,6 @@
     <hint type="destinationlabel">
      <x>116</x>
      <y>296</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>ComparePushButton</sender>
-   <signal>clicked()</signal>
-   <receiver>qSlicerDisplaySSMModuleWidget</receiver>
-   <slot>comparePolyData()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>265</x>
-     <y>414</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>5</x>
-     <y>423</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>polyData1Button</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>qSlicerDisplaySSMModuleWidget</receiver>
-   <slot>selectPolyData1()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>223</x>
-     <y>312</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>34</x>
-     <y>437</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>polyData2Button</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>qSlicerDisplaySSMModuleWidget</receiver>
-   <slot>selectPolyData2()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>383</x>
-     <y>344</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>402</x>
-     <y>436</y>
     </hint>
    </hints>
   </connection>

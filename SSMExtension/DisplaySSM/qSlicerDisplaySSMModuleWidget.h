@@ -54,10 +54,8 @@ public:
   typedef qSlicerAbstractModuleWidget Superclass;
   qSlicerDisplaySSMModuleWidget(QWidget *parent=0);
   virtual ~qSlicerDisplaySSMModuleWidget();
-  //void displayEigenSpectrum(ItkStatisticalModelType* statModel);
   void displayEigenSpectrum(unsigned int nbPrincipalComponent);
   ItkStatisticalModelType::Pointer itkModel;
-  //auto_ptr<VtkStatisticalModelType> vtkModel;
   VtkStatisticalModelType* vtkModel;
   std::vector<std::string> nameITK;
   int indexNode;
@@ -66,9 +64,6 @@ public slots:
   void onSelect();
   void onSelectInputModel();
   void applyModel();
-  void selectPolyData1();
-  void selectPolyData2();
-  void comparePolyData();
 
 protected:
   QScopedPointer<qSlicerDisplaySSMModuleWidgetPrivate> d_ptr;

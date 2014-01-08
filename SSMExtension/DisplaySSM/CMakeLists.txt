@@ -4,6 +4,7 @@
 find_package(Statismo REQUIRED)
 
 link_directories(${STATISMO_LIBRARY_DIR})
+message(${STATISMO_LIBRARY_DIR})
 
 #-----------------------------------------------------------------------------
 set(MODULE_NAME DisplaySSM)

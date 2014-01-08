@@ -308,7 +308,7 @@ public:
     m_scene->AddNode(meanNode.GetPointer());
 
     qSlicerApplication * app = qSlicerApplication::application();
-    app->processEvents();
+    app->processEvents(); // to update scene 
 
 
     outputPolyData->Delete();
@@ -814,5 +814,34 @@ void qSlicerLandmarkSegmentationModuleWidget::comparePolyData()
 
   sampleNode->SetName(d->outputPolyDataName->text().toStdString().c_str());
   this->mrmlScene()->AddNode(sampleNode.GetPointer());
+  
+  /* vtkNew<vtkMRMLColorNode> colorNode;
+  vtkScalarBarWidget* ScalarBarWidget = vtkScalarBarWidget::New();
+  vtkScalarBarActor* ScalarBarActor = vtkScalarBarActor::New();
+  ScalarBarWidget->SetScalarBarActor(ScalarBarActor);
+  ScalarBarWidget->GetScalarBarActor()->SetOrientationToVertical();
+  ScalarBarWidget->GetScalarBarActor()->SetNumberOfLabels(4);
+  ScalarBarWidget->GetScalarBarActor()->SetMaximumNumberOfColors(256);
+  ScalarBarWidget->GetScalarBarActor()->SetTitle("Error");
+  ScalarBarWidget->GetScalarBarActor()->SetLabelFormat(" %s");
+
+  // it's a 2d actor, position it in screen space by percentages
+  ScalarBarWidget->GetScalarBarActor()->SetPosition(0.1, 0.1);
+  ScalarBarWidget->GetScalarBarActor()->SetWidth(0.1);
+  ScalarBarWidget->GetScalarBarActor()->SetHeight(0.8);
+  ScalarBarWidget->GetScalarBarActor()->SetLookupTable();
+
+  qSlicerApplication * app = qSlicerApplication::application();
+  if (app && app->layoutManager())
+  {
+    qMRMLThreeDView* threeDView = app->layoutManager()->threeDWidget(0)->threeDView();
+    vtkRenderer* activeRenderer = app->layoutManager()->activeThreeDRenderer();
+    if (activeRenderer)
+    {
+      ScalarBarWidget->SetInteractor(activeRenderer->GetRenderWindow()->GetInteractor());
+    }
+
+  }
+  //ScalarBarWidget->SetEnabled(true);*/
 
 }

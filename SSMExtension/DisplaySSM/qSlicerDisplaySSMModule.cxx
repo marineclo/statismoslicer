@@ -120,6 +120,7 @@ vtkMRMLAbstractLogic* qSlicerDisplaySSMModule::createLogic()
   return vtkSlicerDisplaySSMLogic::New();
 }
 
+//-----------------------------------------------------------------------------
 void qSlicerDisplaySSMModule::setMRMLScene(vtkMRMLScene* mrmlScene)
 {
   this->Superclass::setMRMLScene(mrmlScene);

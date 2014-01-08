@@ -30,8 +30,6 @@
 #include "itkMeshFileWriter.h"
 #include "itkMeshFileReader.h"
 
-#include <vtkPolyDataReader.h>
-
 //Add to convert itkMesh to vtkPolyData
 #include "vtkPolyData.h"
 #include "vtkPolyDataWriter.h"
@@ -62,7 +60,7 @@
 #include "vtkMRMLScene.h"
 #include "vtkMRMLLayoutNode.h"
 #include "vtkMRMLDoubleArrayNode.h"
-#include <vtkDoubleArray.h>
+#include "vtkDoubleArray.h"
 #include "vtkMRMLChartViewNode.h"
 #include "vtkMRMLChartNode.h"
 
@@ -72,16 +70,9 @@
 
 #include "vtkMRMLSelectionNode.h"
 #include "vtkMatrix4x4.h"
-#include "vtkImageReslice.h"
+#include <vtkImageChangeInformation.h>
 
-#include "vtkMRMLColorNode.h"
-#include "vtkMRMLColorTableNode.h"
-#include "vtkMRMLColorTableStorageNode.h"
-#include "vtkLookupTable.h"
-
-#include <vtkScalarBarActor.h>
-#include <vtkScalarBarWidget.h>
-
+#include "vtkMRMLModelHierarchyNode.h"
 
 //
 #include "qSlicerApplication.h"
@@ -89,8 +80,6 @@
 #include "qMRMLThreeDView.h"
 #include "qSlicerIO.h"
 #include "qSlicerCoreIOManager.h"
-
-#include <vtkMetaImageWriter.h>
 
 #include <time.h>
 
@@ -110,7 +99,7 @@ public:
 
   vtkPolyData* convertMeshToVtk(MeshType::Pointer meshToConvert, vtkPolyData *  m_PolyDataReturn);
 
-  vtkImageData* convertPolyDataToImageData(vtkSmartPointer<vtkPolyData> inpuPolyData, vtkImageData* meanImageReturn,  double *origin, double spacing[], double *bounds);
+  vtkImageData* convertPolyDataToImageData(vtkPolyData* inpuPolyData, double *origin, double spacing[], double *bounds);
 
 };
 
@@ -122,7 +111,9 @@ qSlicerDisplaySSMModuleWidgetPrivate::qSlicerDisplaySSMModuleWidgetPrivate()
 {
 }
 
-vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(MeshType::Pointer meshToConvert, vtkPolyData *  m_PolyDataReturn)
+//-----------------------------------------------------------------------------
+vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(
+  MeshType::Pointer meshToConvert, vtkPolyData *  m_PolyDataReturn)
 {
   typedef MeshType::MeshTraits                      TriangleMeshTraits;
   typedef MeshType::PointType                       PointType;
@@ -208,9 +199,12 @@ vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(MeshType::Po
   return m_PolyDataReturn;
 }
 
-vtkImageData* qSlicerDisplaySSMModuleWidgetPrivate::convertPolyDataToImageData(vtkSmartPointer< vtkPolyData > inpuPolyData, vtkImageData* meanImageReturn, double *origin, double spacing[], double *bounds){
+//-----------------------------------------------------------------------------
+vtkImageData* qSlicerDisplaySSMModuleWidgetPrivate::convertPolyDataToImageData(
+  vtkPolyData* inpuPolyData, double *origin, double spacing[], double *bounds)
+  {
 
-  vtkSmartPointer< vtkImageData >   whiteImage = vtkSmartPointer< vtkImageData >::New();
+  vtkNew< vtkImageData >   whiteImage;
   //double bounds[6];
   inpuPolyData->GetBounds(bounds);
 
@@ -219,10 +213,10 @@ vtkImageData* qSlicerDisplaySSMModuleWidgetPrivate::convertPolyDataToImageData(v
   // compute dimensions
   int dim[3];
   for (int i = 0; i < 3; i++)
-    {
+  {
     std::cout<<"bounds"<<i<<"="<<bounds[i]<<"bounds"<<i+3<<"="<<bounds[i+3]<<std::endl;
     dim[i] = static_cast<int>(ceil((bounds[i * 2 + 1] - bounds[i * 2]) / spacing[i]));
-    }
+  }
 
   whiteImage->SetDimensions(dim);
   whiteImage->SetExtent(0, dim[0] - 1, 0, dim[1] - 1, 0, dim[2] - 1);
@@ -231,9 +225,7 @@ vtkImageData* qSlicerDisplaySSMModuleWidgetPrivate::convertPolyDataToImageData(v
   origin[0] = bounds[0] + spacing[0] / 2;
   origin[1] = bounds[2] + spacing[1] / 2;
   origin[2] = bounds[4] + spacing[2] / 2;
-  std::cout<<"origin[0]= " <<origin[0]<<std::endl;
-  std::cout<<"origin[1]= " <<origin[1]<<std::endl;
-  std::cout<<"origin[2]= " <<origin[2]<<std::endl;
+  std::cout<<"origin[0]= " <<origin[0]<<"origin[1]= " <<origin[1]<<"origin[2]= " <<origin[2]<<std::endl;
   whiteImage->SetOrigin(origin);
 
   whiteImage->SetScalarTypeToUnsignedChar();
@@ -249,28 +241,25 @@ vtkImageData* qSlicerDisplaySSMModuleWidgetPrivate::convertPolyDataToImageData(v
   }
 
   // polygonal data --> image stencil:
-  vtkSmartPointer< vtkPolyDataToImageStencil > pol2stenc = vtkSmartPointer< vtkPolyDataToImageStencil >::New();
-
+  vtkNew< vtkPolyDataToImageStencil > pol2stenc;
   pol2stenc->SetInput(inpuPolyData);
-
   pol2stenc->SetOutputOrigin(origin);
   pol2stenc->SetOutputSpacing(spacing);
   pol2stenc->SetOutputWholeExtent(whiteImage->GetExtent());
   pol2stenc->Update();
 
   // cut the corresponding white image and set the background:
-  vtkSmartPointer< vtkImageStencil > imgstenc = vtkSmartPointer< vtkImageStencil >::New();
-
-  imgstenc->SetInput(whiteImage);
+  vtkNew< vtkImageStencil > imgstenc;
+  imgstenc->SetInput(whiteImage.GetPointer());
   imgstenc->SetStencil(pol2stenc->GetOutput());
-
   imgstenc->ReverseStencilOff();
   imgstenc->SetBackgroundValue(outval);
   imgstenc->Update();
 
-  meanImageReturn->ShallowCopy(imgstenc->GetOutput());
+  vtkImageData * outputImageData = imgstenc->GetOutput();
+  outputImageData->Register(0);
 
-  return meanImageReturn;
+  return outputImageData;
 }
 
 
@@ -315,8 +304,6 @@ void qSlicerDisplaySSMModuleWidget::setMRMLScene(vtkMRMLScene* mrmlScene)
 void qSlicerDisplaySSMModuleWidget::onSelectInputModel()
 {
   Q_D(qSlicerDisplaySSMModuleWidget);
-  //vtkPolyData* meanModel = vtkPolyData::New();
-  //unsigned int nbPrincipalComponent = 0;
   QString inputFile = QFileDialog::getOpenFileName(this, "Select input model", QString());
   d->modelNamePath->setText(inputFile);
 }
@@ -327,13 +314,10 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
   vtkPolyData* meanModel = vtkPolyData::New();
   unsigned int nbPrincipalComponent = 0;
   // Load the model
-  //std::string modelString = inputFile.toStdString();
   std::string modelString = d->modelNamePath->text().toStdString();
 
   if (d->radioButtonVTK->isChecked()){
     try {
-      //vtkModel(new VtkStatisticalModelType::Load(modelString.c_str()));
-      //vtkModel->Load(modelString.c_str());
       vtkModel = VtkStatisticalModelType::Load(modelString.c_str());
       meanModel = vtkModel->DrawMean();
       nbPrincipalComponent = vtkModel->GetNumberOfPrincipalComponents();
@@ -354,7 +338,7 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
       typedef ItkRepresenterType::MeshType TestType;
       TestType::Pointer meanDf = itkModel->DrawMean();
 
-      meanModel=d->convertMeshToVtk(meanDf, meanModel);
+      meanModel = d->convertMeshToVtk(meanDf, meanModel);
 
       std::cout<<"test6"<<std::endl;
 
@@ -375,8 +359,12 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
   /*vtkSlicerDisplaySSMLogic* moduleLogic = vtkSlicerDisplaySSMLogic::New();
   moduleLogic->DisplaySampleModel(meanModel, this->mrmlScene());*/
 
-  std::cout<<"test7"<<std::endl;
-
+  //Create a new hierarchy for each new ssm model loading
+  /*vtkNew<vtkMRMLModelHierarchyNode> hierarchyNode;
+  hierarchyNode->SetScene(this->mrmlScene());
+  //hierarchyNode->SetName()
+  this->mrmlScene()->AddNode( hierarchyNode.GetPointer() );*/
+  
   vtkNew<vtkMRMLModelDisplayNode> modelDisplayNode;
   this->mrmlScene()->AddNode(modelDisplayNode.GetPointer());
 
@@ -384,58 +372,43 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
   meanNode->SetAndObservePolyData(meanModel);
   meanNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
   meanNode->SetName("Mean");
+  //hierarchyNode->SetParentNodeID(meanNode->GetID());
   this->mrmlScene()->AddNode(meanNode.GetPointer());
+  //hierarchyNode->SetModelNodeID(meanNode->GetID());
 
   double spacing[3]; // desired volume spacing
   spacing[0] = 0.24;
   spacing[1] = 0.24;
   spacing[2] = 0.6;
 
-
   double origin[3];
   double bounds[6];
-  vtkImageData* meanImage = vtkImageData::New();
-  meanImage = d->convertPolyDataToImageData(meanModel, meanImage, &origin[0], spacing, &bounds[0]);
-  std::cout<<"test5="<<origin[0]<<" "<<origin[1]<<" "<<origin[2]<<std::endl;
-
-  //int* extentsMean = meanImage->GetExtent();
-  //std::cout<<"extentsMean "<<extentsMean[0]<<" "<<extentsMean[1]<<" "<<extentsMean[2]<<" "<<extentsMean[3]<<" "<<extentsMean[4]<<" "<<extentsMean[5]<<std::endl;
-
-  /*vtkMetaImageWriter* writer = vtkMetaImageWriter::New();
-  //writer->SetFileName("/home/marine/Documents/SSM/Tools/PolyDataToImageData/meanVolume.mhd");
-  writer->SetFileName("/Users/Marine/EPFL/Documents/Tools/ssmtool/PolyDataToImageData/meanVolume.mhd");
-  writer->SetInput(meanImage);
-  writer->Write();*/
-
-
-  /*qSlicerCoreIOManager* coreIOManager = qSlicerCoreApplication::application()->coreIOManager();
-  qSlicerIO::IOProperties fileParameters;
-  fileParameters["filename"] = "/home/marine/Documents/SSM/Tools/PolyDataToImageData/meanVolume.mhd";
-  vtkMRMLNode* volumeNode = coreIOManager->loadNodesAndGetFirst("VolumeFile", fileParameters);*/
-
+  vtkSmartPointer<vtkImageData> meanImage;
+  meanImage.TakeReference(d->convertPolyDataToImageData(meanModel, &origin[0], spacing, &bounds[0]));
 
   //Create a displayable node and add to the scene
   vtkNew<vtkMRMLLabelMapVolumeDisplayNode> volumeDisplayNode;
   volumeDisplayNode->SetAndObserveColorNodeID("vtkMRMLColorTableNodeFileGenericAnatomyColors.txt");
   this->mrmlScene()->AddNode( volumeDisplayNode.GetPointer() );
-  //meanImage->SetOrigin(-bounds[0],-bounds[2],bounds[4]);
-  meanImage->SetOrigin(0, 0, 0);
-  double* origin2 = meanImage->GetOrigin();
-  std::cout<<"test7="<<origin2[0]<<" "<<origin2[1]<<" "<<origin2[2]<<std::endl;
+  
+  vtkNew<vtkImageChangeInformation> ici;
+  ici->SetInput(meanImage);
+  ici->SetOutputSpacing( 1, 1, 1 );
+  ici->SetOutputOrigin( 0, 0, 0 );
+  ici->Update();
 
   //Create a scalar volume node with the created volume
   vtkNew<vtkMRMLScalarVolumeNode> volumeNode;
 
-  vtkMatrix4x4* matrix = vtkMatrix4x4::New();
+  vtkNew<vtkMatrix4x4> matrix;
   matrix->Identity();
   matrix->SetElement(0,0,-1);
   matrix->SetElement(1,1,-1);
 
-  volumeNode->SetIJKToRASMatrix(matrix);
+  volumeNode->SetIJKToRASMatrix(matrix.GetPointer());
   volumeNode->SetAndObserveDisplayNodeID(volumeDisplayNode->GetID());
-  volumeNode->SetAndObserveImageData(meanImage);
+  volumeNode->SetAndObserveImageData(ici->GetOutput());
   volumeNode->SetOrigin(-bounds[0], -bounds[2], bounds[4]); //Compensate Slicer coordinates
-  //volumeNode->SetOrigin(14,36,bounds[4]); //Compensate Slicer coordinates
   volumeNode->SetSpacing(spacing);
   volumeNode->SetLabelMap(true);
   this->mrmlScene()->AddNode(volumeNode.GetPointer());
@@ -463,11 +436,8 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
   threeDView->resetFocalPoint();*/
 
   meanModel->Delete();
-  matrix->Delete();
-  //writer->Delete();
-  meanImage->Delete();
 
-   // Display Eigen spectrum
+  // Display Eigen spectrum
   displayEigenSpectrum(nbPrincipalComponent);
 
   // Set the number of components for the pcSlider
@@ -554,10 +524,10 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
     vtkNew<vtkMRMLModelDisplayNode> sampleDisplayNode;
     srand(time(NULL)); // initialisation de rand
 
-    double r = (rand()/(double)RAND_MAX ); //random color between 0 and 1
+    /*double r = (rand()/(double)RAND_MAX ); //random color between 0 and 1
     double g = (rand()/(double)RAND_MAX );
     double b = (rand()/(double)RAND_MAX );
-    sampleDisplayNode->SetColor(r,g,b); // random color
+    sampleDisplayNode->SetColor(r,g,b); // random color*/
     this->mrmlScene()->AddNode(sampleDisplayNode.GetPointer());
 
     vtkNew<vtkMRMLModelNode> sampleNode;
@@ -642,7 +612,7 @@ void qSlicerDisplaySSMModuleWidget::displayEigenSpectrum(unsigned int nbPrincipa
   // Set properties on the Chart
   chartNode->SetProperty("default", "title", "EigenSpectrum");
   chartNode->SetProperty("default", "xAxisLabel", "Principal components");
-  chartNode->SetProperty("default", "yAxisLabel", "Eigen value");
+  chartNode->SetProperty("default", "yAxisLabel", "% of variation captured");
   chartNode->SetProperty("default", "type", "Line");
   chartNode->SetProperty("default", "showMarkers", "on");
 
@@ -651,120 +621,3 @@ void qSlicerDisplaySSMModuleWidget::displayEigenSpectrum(unsigned int nbPrincipa
 
 }
 
-//-----------------------------------------------------------------------------
-void qSlicerDisplaySSMModuleWidget::selectPolyData1()
-{
-  Q_D(qSlicerDisplaySSMModuleWidget);
-  QString inputFile = QFileDialog::getOpenFileName(this, "Select input polyData1", QString());
-  d->polyData1Name->setText(inputFile);
-}
-
-//-----------------------------------------------------------------------------
-void qSlicerDisplaySSMModuleWidget::selectPolyData2()
-{
-  Q_D(qSlicerDisplaySSMModuleWidget);
-  QString inputFile = QFileDialog::getOpenFileName(this, "Select input model", QString());
-  d->polyData2Name->setText(inputFile);
-}
-
-//-----------------------------------------------------------------------------
-void qSlicerDisplaySSMModuleWidget::comparePolyData()
-{
-  Q_D(qSlicerDisplaySSMModuleWidget);
-  std::string polyData1String = d->polyData1Name->text().toStdString();
-  std::string polyData2String = d->polyData2Name->text().toStdString();
-
-  vtkNew<vtkPolyDataReader> reader1;
-  reader1->SetFileName(polyData1String.c_str());
-  reader1->Update();
-  vtkSmartPointer< vtkPolyData > polyData1 = reader1->GetOutput();
-
-  vtkNew<vtkPolyDataReader> reader2;
-  reader2->SetFileName(polyData2String.c_str());
-  reader2->Update();
-  vtkSmartPointer< vtkPolyData >  polyData2 = reader2->GetOutput();
-
-  vtkSmartPointer<vtkPointLocator> pointLocator2 = vtkSmartPointer<vtkPointLocator>::New();
-  pointLocator2->SetDataSet(polyData2);
-
-  vtkSmartPointer<vtkFloatArray> scalars = vtkSmartPointer<vtkFloatArray>::New();
-  scalars->SetNumberOfComponents(1);
-  scalars->Allocate(polyData1->GetNumberOfPoints(),1000);
-
-  for (vtkIdType i=0; i<polyData1->GetNumberOfPoints(); i++){
-      double Xi[3];
-      polyData1->GetPoint(i,Xi);
-      double Yid[3];
-      int ptLocatorId = pointLocator2->FindClosestPoint(Xi);
-      polyData2->GetPoint(ptLocatorId,Yid);
-      double distance = sqrt(vtkMath::Distance2BetweenPoints(Xi,Yid));
-      scalars->InsertTuple1(i,distance);
-    }
-
-  vtkSmartPointer<vtkPointLocator> pointLocator1 = vtkSmartPointer<vtkPointLocator>::New();
-  pointLocator1->SetDataSet(polyData1);
-
-  for (vtkIdType i=0; i<polyData2->GetNumberOfPoints(); i++){
-      double Yi[3];
-      polyData2->GetPoint(i,Yi);
-      double Xid[3];
-      vtkIdType ptLocatorId = pointLocator1->FindClosestPoint(Yi);
-      polyData1->GetPoint(ptLocatorId,Xid);
-      double distance = sqrt(vtkMath::Distance2BetweenPoints(Yi,Xid));
-      double xdistance = scalars->GetTuple1(ptLocatorId);
-      if (distance>xdistance){
-          scalars->SetTuple1(ptLocatorId,distance);
-        }
-    }
-  polyData1->GetPointData()->SetScalars(scalars);
-  scalars->SetName("scalarsDis");
-  double rangeScalars[2];
-  scalars->GetRange(rangeScalars);
-  std::cout<<"min= "<<rangeScalars[0]<<" max = "<<rangeScalars[1]<<std::endl;
-
-  // Add polydata to the scene
-  vtkNew<vtkMRMLModelDisplayNode> sampleDisplayNode;
-  sampleDisplayNode->SetScalarVisibility(true);
-  sampleDisplayNode->SetActiveScalarName(scalars->GetName());
-  sampleDisplayNode->SetAutoScalarRange(true);
-  sampleDisplayNode->SetAndObserveColorNodeID("vtkMRMLColorTableNodeWarm1");
-  this->mrmlScene()->AddNode(sampleDisplayNode.GetPointer());
-
-  vtkNew<vtkMRMLModelNode> sampleNode;
-  sampleNode->SetAndObservePolyData(polyData1);
-  sampleNode->SetAndObserveDisplayNodeID(sampleDisplayNode->GetID());
-
-  sampleNode->SetName(d->outputPolyDataName->text().toStdString().c_str());
-  this->mrmlScene()->AddNode(sampleNode.GetPointer());
-
- /* vtkNew<vtkMRMLColorNode> colorNode;
-  vtkScalarBarWidget* ScalarBarWidget = vtkScalarBarWidget::New();
-  vtkScalarBarActor* ScalarBarActor = vtkScalarBarActor::New();
-  ScalarBarWidget->SetScalarBarActor(ScalarBarActor);
-  ScalarBarWidget->GetScalarBarActor()->SetOrientationToVertical();
-  ScalarBarWidget->GetScalarBarActor()->SetNumberOfLabels(4);
-  ScalarBarWidget->GetScalarBarActor()->SetMaximumNumberOfColors(256);
-  ScalarBarWidget->GetScalarBarActor()->SetTitle("Error");
-  ScalarBarWidget->GetScalarBarActor()->SetLabelFormat(" %s");
-
-  // it's a 2d actor, position it in screen space by percentages
-  ScalarBarWidget->GetScalarBarActor()->SetPosition(0.1, 0.1);
-  ScalarBarWidget->GetScalarBarActor()->SetWidth(0.1);
-  ScalarBarWidget->GetScalarBarActor()->SetHeight(0.8);
-  ScalarBarWidget->GetScalarBarActor()->SetLookupTable();
-
-  qSlicerApplication * app = qSlicerApplication::application();
-  if (app && app->layoutManager())
-  {
-    qMRMLThreeDView* threeDView = app->layoutManager()->threeDWidget(0)->threeDView();
-    vtkRenderer* activeRenderer = app->layoutManager()->activeThreeDRenderer();
-    if (activeRenderer)
-    {
-      ScalarBarWidget->SetInteractor(activeRenderer->GetRenderWindow()->GetInteractor());
-    }
-
-  }
-  //ScalarBarWidget->SetEnabled(true);*/
-
-
-}

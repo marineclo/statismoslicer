@@ -37,7 +37,7 @@ if(NOT DEFINED ${proj}_DIR)
 
   ExternalProject_Add(${proj}
     GIT_REPOSITORY "${git_protocol}://github.com/statismo/statismo.git"
-    #GIT_TAG "cf536cdc38146535d8af1147dedc7fe5bf3da135"
+    #GIT_TAG "303965b2fe30d464f2ceeb0c4976fcd9fa996abb"
     #GIT_TAG "v0.81"
     SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
     BINARY_DIR ${proj}-build
