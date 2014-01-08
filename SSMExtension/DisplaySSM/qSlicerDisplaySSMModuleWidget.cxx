@@ -332,6 +332,8 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
       typedef ItkRepresenterType::MeshType TestType;
       TestType::Pointer meanDf = itkModel->DrawMean();
       meanModel = d->convertMeshToVtk(meanDf, meanModel);
+      nameITK.push_back("Mean");
+      indexNode=0;
     }
     catch (itk::ExceptionObject& o) {
       std::cout << "Exception occured while building the shape model" << std::endl;
@@ -345,7 +347,7 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
     }
 
   // Display Model and Volume
-  displayModelVolume(meanModel);
+  displayModelVolume(meanModel, "Mean");
   // Add mean model to the scene
   /*vtkSlicerDisplaySSMLogic* moduleLogic = vtkSlicerDisplaySSMLogic::New();
   moduleLogic->DisplaySampleModel(meanModel, this->mrmlScene());*/
@@ -359,7 +361,6 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
   d->pcSlider->setMaximum(nbPrincipalComponent);
   d->pcSlider->setValue(1);
   d->stdSlider->setValue(0);
-  std::cout<<"test5"<<std::endl;
 
 }
 
@@ -379,11 +380,9 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
   ssSample <<"SamplePc"<<pc<<"Std"<<std;
   std::string sampleName = ssSample.str();
 
-  bool alreadyCompute = false; //boolean to check if the model aready exist
-
   //Get the model Display node
   vtkSmartPointer<vtkCollection> modelDisplayNodes = vtkSmartPointer<vtkCollection>::Take( this->mrmlScene()->GetNodesByClass("vtkMRMLModelDisplayNode") );
-  //std::cout<<"Nb Collection= "<<modelDisplayNodes->GetNumberOfItems ()<<std::endl;
+  std::cout<<"Nb Collection= "<<modelDisplayNodes->GetNumberOfItems ()<<std::endl;
 
   if (d->radioButtonVTK->isChecked()){
     int nbPrincipalComponent = vtkModel->GetNumberOfPrincipalComponents();
@@ -398,21 +397,25 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
     typedef std::vector<std::string>::iterator ItemIterator;
     ItemIterator iter = std::find(nameITK.begin(), nameITK.end(), sampleName); //check if the name already exists
     size_t index = std::distance(nameITK.begin(), iter);
+    std::cout<<"index= "<<index<<std::endl;
+    std::cout<<"indexNode= "<<indexNode<<std::endl;
+    std::cout<<"Name= "<<sampleName<<std::endl;
 
     if (nameITK.size()!=0){
-      vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (4+indexNode) );
+      vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (3+indexNode) );
       modelViewNode->VisibilityOff();
+      std::cout<<"IDmodelOFF= "<<modelViewNode->GetID()<<std::endl;
     }
-    else{
+    else{ //just the mean model exist
       vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (modelDisplayNodes->GetNumberOfItems ()-1) );
       modelViewNode->VisibilityOff();
     }
 
     if(iter!=nameITK.end()){ //model already exists
-      alreadyCompute = true;
       //Set Visibility on of the current model
-      vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (4+index) );
+      vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (3+index) );
       modelViewNode->VisibilityOn();
+      std::cout<<"IDmodelON= "<<modelViewNode->GetID()<<std::endl;
 
     }else{
       nameITK.push_back(sampleName);
@@ -428,28 +431,10 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
       std::cout<<"prob = "<<prob<<std::endl;*/
 
       samplePC=d->convertMeshToVtk(itkSamplePC, samplePC);
-      displayModelVolume(samplePC);
+      displayModelVolume(samplePC, sampleName);
     }
     indexNode = index;
   }
-  
-  //if (!alreadyCompute){
-
-    //displayModelVolume(samplePC);
-    // Add polydata sample to the scene
-    /*vtkNew<vtkMRMLModelDisplayNode> sampleDisplayNode;
-    this->mrmlScene()->AddNode(sampleDisplayNode.GetPointer());
-
-    vtkNew<vtkMRMLModelNode> sampleNode;
-    sampleNode->SetAndObservePolyData(samplePC);
-    sampleNode->SetAndObserveDisplayNodeID(sampleDisplayNode->GetID());
-
-    sampleNode->SetName(sampleName.c_str());
-    this->mrmlScene()->AddNode(sampleNode.GetPointer());*/
-
-    /*vtkSlicerDisplaySSMLogic* moduleLogic = vtkSlicerDisplaySSMLogic::New();
-    moduleLogic->DisplaySampleModel(samplePC, this->mrmlScene());*/
-  //}
   samplePC->Delete();
 
 }
@@ -529,7 +514,7 @@ void qSlicerDisplaySSMModuleWidget::displayEigenSpectrum(unsigned int nbPrincipa
 }
 
 //-----------------------------------------------------------------------------
-void qSlicerDisplaySSMModuleWidget::displayModelVolume(vtkPolyData* meanModel)
+void qSlicerDisplaySSMModuleWidget::displayModelVolume(vtkPolyData* modelToDisplay, std::string modelName)
 {
   Q_D(qSlicerDisplaySSMModuleWidget);
   
@@ -538,11 +523,12 @@ void qSlicerDisplaySSMModuleWidget::displayModelVolume(vtkPolyData* meanModel)
   this->mrmlScene()->AddNode(modelDisplayNode.GetPointer());
 
   vtkNew<vtkMRMLModelNode> meanNode;
-  meanNode->SetAndObservePolyData(meanModel);
+  meanNode->SetAndObservePolyData(modelToDisplay);
   meanNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
-  meanNode->SetName("Mean");
+  meanNode->SetName(modelName.c_str());
   this->mrmlScene()->AddNode(meanNode.GetPointer());
-
+  std::cout<<"IDmodel= "<<modelDisplayNode->GetID()<<std::endl;
+  
   double spacing[3]; // desired volume spacing
   spacing[0] = 0.24;
   spacing[1] = 0.24;
@@ -550,7 +536,7 @@ void qSlicerDisplaySSMModuleWidget::displayModelVolume(vtkPolyData* meanModel)
 
   double bounds[6];
   vtkSmartPointer<vtkImageData> meanImage;
-  meanImage.TakeReference(d->convertPolyDataToImageData(meanModel, spacing, &bounds[0]));
+  meanImage.TakeReference(d->convertPolyDataToImageData(modelToDisplay, spacing, &bounds[0]));
 
   //Create a displayable node and add to the scene
   vtkNew<vtkMRMLLabelMapVolumeDisplayNode> volumeDisplayNode;

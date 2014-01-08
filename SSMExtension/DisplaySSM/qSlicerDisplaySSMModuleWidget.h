@@ -59,7 +59,7 @@ public:
   VtkStatisticalModelType* vtkModel;
   std::vector<std::string> nameITK;
   int indexNode;
-  void displayModelVolume(vtkPolyData* meanModel);
+  void displayModelVolume(vtkPolyData* modelToDisplay, std::string modelName);
 
 public slots:
   void onSelect();
