@@ -90,11 +90,6 @@ void vtkSlicerDisplaySSMLogic::DisplaySampleModel(vtkPolyData* polydata, vtkMRML
   vtkSlicerModelsLogic* modelsLogic = vtkSlicerModelsLogic::New();
   modelsLogic->SetMRMLScene(mrmlScene);
   vtkMRMLModelNode* modelNode = modelsLogic->AddModel(polydata);
-  //modelNode->GetDisplayNode()->SetColor(1, 0, 0); 
-  //modelNode->GetDisplayNode()->SetName();
-  if (modelNode == NULL){
-    std::cout<<"empty"<<std::endl;
-  }
 }
 
 void vtkSlicerDisplaySSMLogic::ObserveMRMLScene()
