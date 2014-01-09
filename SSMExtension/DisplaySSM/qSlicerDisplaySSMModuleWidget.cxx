@@ -27,8 +27,6 @@
 #include "itkMeshRepresenter.h"
 #include "itkMesh.h"
 #include "statismo_ITK/itkStatisticalModel.h"
-#include "itkMeshFileWriter.h"
-#include "itkMeshFileReader.h"
 
 //Add to convert itkMesh to vtkPolyData
 #include "vtkPolyData.h"
@@ -46,10 +44,6 @@
 #include <vtkPolyDataToImageStencil.h>
 #include <vtkImageStencil.h>
 #include <vtkPointData.h>
-
-//Compare PolyData
-#include "vtkPointLocator.h"
-#include "vtkMath.h"
 
 // DisplaySSM Logic includes
 #include "vtkSlicerDisplaySSMLogic.h"
@@ -72,8 +66,6 @@
 #include "vtkMatrix4x4.h"
 #include <vtkImageChangeInformation.h>
 
-#include "vtkMRMLModelHierarchyNode.h"
-
 //
 #include "qSlicerApplication.h"
 #include "qSlicerLayoutManager.h"
@@ -83,11 +75,8 @@
 
 #include <time.h>
 
-//const unsigned Dimensions = 3;
+
 typedef itk::Mesh<float, Dimensions> MeshType;
-typedef itk::MeshFileReader<MeshType> MeshFileReaderType;
-//typedef itk::MeshRepresenter<float, Dimensions> ItkRepresenterType;
-//typedef itk::StatisticalModel<ItkRepresenterType> ItkStatisticalModelType;
 typedef vnl_vector<statismo::ScalarType> itkVectorType;
 
 //-----------------------------------------------------------------------------
@@ -125,14 +114,11 @@ vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(
   typedef MeshType::CellsContainerPointer           CellsContainerPointer;
   typedef MeshType::CellsContainerIterator          CellsContainerIterator;
 
-  //vtkPoints  *   m_Points = vtkPoints::New();
   vtkSmartPointer< vtkPoints >   m_Points = vtkSmartPointer< vtkPoints >::New();
   vtkSmartPointer< vtkPolyData >   m_PolyData = vtkSmartPointer< vtkPolyData >::New();
-
   vtkCellArray * m_Polys = vtkCellArray::New();
 
   int numPoints =  meshToConvert->GetNumberOfPoints();
-  //std::cout<<"numPoints = "<<numPoints<<std::endl;
 
   InputPointsContainerPointer      myPoints = meshToConvert->GetPoints();
   InputPointsContainerIterator     points = myPoints->Begin();
@@ -142,7 +128,6 @@ vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(
   {
     printf( "Aborting: No Points in GRID\n");
   }
-
   m_Points->SetNumberOfPoints(numPoints);
   
   int idx=0;
@@ -156,10 +141,7 @@ vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(
     m_Points->SetPoint(idx++,vpoint);
     points++;
   }
-
   m_PolyData->SetPoints(m_Points);
-
-  //m_Points->Delete();
 
   CellsContainerPointer cells = meshToConvert->GetCells();
   CellsContainerIterator cellIt = cells->Begin();
@@ -188,7 +170,6 @@ vtkPolyData* qSlicerDisplaySSMModuleWidgetPrivate::convertMeshToVtk(
         printf("something \n");
     }
     cellIt++;
-
   }
 
   m_PolyData->SetPolys(m_Polys);
@@ -204,9 +185,7 @@ vtkImageData* qSlicerDisplaySSMModuleWidgetPrivate::convertPolyDataToImageData(
   vtkPolyData* inpuPolyData, double spacing[], double *bounds)
 {
   vtkNew< vtkImageData >   whiteImage;
-  //double bounds[6];
   inpuPolyData->GetBounds(bounds);
-
   whiteImage->SetSpacing(spacing);
 
   // compute dimensions
@@ -224,7 +203,6 @@ vtkImageData* qSlicerDisplaySSMModuleWidgetPrivate::convertPolyDataToImageData(
   origin[1] = bounds[2] + spacing[1] / 2;
   origin[2] = bounds[4] + spacing[2] / 2;
   whiteImage->SetOrigin(origin);
-
   whiteImage->SetScalarTypeToUnsignedChar();
   whiteImage->AllocateScalars();
 

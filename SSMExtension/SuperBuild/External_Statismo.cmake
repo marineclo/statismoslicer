@@ -31,14 +31,22 @@ if(NOT DEFINED ${proj}_DIR)
       -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET})
   endif()
 
-  if(NOT DEFINED git_protocol)
+  option(CHOOSE_GIT_PROTOCOL "Choose to use git or https protocol" ON)
+  if(CHOOSE_GIT_PROTOCOL)
     set(git_protocol "git")
+  else(CHOOSE_GIT_PROTOCOL)
+    set(git_protocol "https")
   endif()
+  
+  #if(NOT DEFINED git_protocol)
+  #  set(git_protocol "git")
+  #endif()
 
   ExternalProject_Add(${proj}
     GIT_REPOSITORY "${git_protocol}://github.com/statismo/statismo.git"
-    #GIT_TAG "303965b2fe30d464f2ceeb0c4976fcd9fa996abb"
-    #GIT_TAG "v0.81"
+    #GIT_REPOSITORY "${git_protocol}://github.com/arnaudgelas/statismo.git"
+    GIT_TAG "b9ad869b4df1f258f59c4cc31ef2f76c69b965ec"
+    #GIT_TAG "BuildSystem"
     SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
     BINARY_DIR ${proj}-build
     CMAKE_GENERATOR ${gen}
@@ -54,10 +62,11 @@ if(NOT DEFINED ${proj}_DIR)
     DEPENDS
       ${${proj}_DEPENDENCIES}
     )
+    
   #set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-build)
   #set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-install)
   set(${proj}_DIR ${CMAKE_BINARY_DIR}/${proj}-install/lib/cmake/statismo-0.81)
-
+  
 else()
   # The project is provided using <proj>_DIR, nevertheless since other project may depend on <proj>,
   # let's add an 'empty' one

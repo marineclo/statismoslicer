@@ -296,11 +296,6 @@ public:
 
     QString outputModelName = "OutputModelSeg" +QString::number(m_iter_no);
 
-   /* m_modelNode->SetAndObservePolyData(outputPolyData);
-    m_modelNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
-    m_modelNode->SetName(outputModelName.toStdString().c_str());
-    m_modelNode->Modified();*/
-
     vtkNew<vtkMRMLModelNode> meanNode;
     meanNode->SetAndObservePolyData(outputPolyData);
     meanNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
@@ -309,7 +304,6 @@ public:
 
     qSlicerApplication * app = qSlicerApplication::application();
     app->processEvents(); // to update scene 
-
 
     outputPolyData->Delete();
   }
@@ -357,14 +351,9 @@ qSlicerLandmarkSegmentationModuleWidgetPrivate::qSlicerLandmarkSegmentationModul
 {
 }
 
-/**
-* read landmarks from Slicer list and return them as a list.
-*
-* The format is: label,x,y,z
-*
-* @param Markups Node
-* @returns A list of itk points
-*/
+
+//read landmarks from Slicer list and return them as a list.
+//-----------------------------------------------------------------------------
 std::vector<PointType > qSlicerLandmarkSegmentationModuleWidgetPrivate::readLandmarks(vtkMRMLMarkupsFiducialNode* markupsNode) {
 
   std::vector<PointType> ptList;
@@ -384,7 +373,7 @@ std::vector<PointType > qSlicerLandmarkSegmentationModuleWidgetPrivate::readLand
 }
 
 // Returns a new model, that is restricted to go through the points specified in targetLandmarks..
-//
+//-----------------------------------------------------------------------------
 StatisticalModelType::Pointer qSlicerLandmarkSegmentationModuleWidgetPrivate::computePartiallyFixedModel(const RigidTransformType* rigidTransform, const StatisticalModelType* statisticalModel,
 const  std::vector<PointType >& modelLandmarks,const  std::vector<PointType >& targetLandmarks, double variance)
 {
@@ -420,7 +409,7 @@ const  std::vector<PointType >& modelLandmarks,const  std::vector<PointType >& t
   return partiallyFixedModel;
 }
 
-
+//-----------------------------------------------------------------------------
 vtkPolyData* qSlicerLandmarkSegmentationModuleWidgetPrivate::convertMeshToVtk(MeshType::Pointer meshToConvert, vtkPolyData *  m_PolyDataReturn)
 {
   typedef MeshType::MeshTraits                      TriangleMeshTraits;
@@ -507,6 +496,7 @@ vtkPolyData* qSlicerLandmarkSegmentationModuleWidgetPrivate::convertMeshToVtk(Me
   return m_PolyDataReturn;
 }
 
+//-----------------------------------------------------------------------------
 void qSlicerLandmarkSegmentationModuleWidgetPrivate::ConnectVTKToITK(vtkImageExport* in, itk::VTKImageImport<CTImageType>* out){
   
   out->SetUpdateInformationCallback(in->GetUpdateInformationCallback());
@@ -553,19 +543,48 @@ void qSlicerLandmarkSegmentationModuleWidget::setMRMLScene(vtkMRMLScene* mrmlSce
   this->qSlicerAbstractModuleWidget::setMRMLScene(mrmlScene);
 }
 
+//-----------------------------------------------------------------------------
 void qSlicerLandmarkSegmentationModuleWidget::setModel(){
   Q_D(qSlicerLandmarkSegmentationModuleWidget);
   QString inputFile = QFileDialog::getOpenFileName(this, "Select model", QString());
   d->modelName->setText(inputFile);
+  
+  // load the model create a shape model transform with it
+  StatisticalModelType::Pointer model = StatisticalModelType::New();
+  model->Load(inputFile.toStdString().c_str());
+  
+  vtkPolyData* meanModel = vtkPolyData::New();
+  typedef RepresenterType::MeshType TestType;
+  TestType::Pointer meanDf = model->DrawMean();
+  meanModel = d->convertMeshToVtk(meanDf, meanModel);
+  
+  //Convert to Slicer coordinate system
+  vtkSmartPointer< vtkPoints >   point = vtkSmartPointer< vtkPoints >::New();
+  point->SetNumberOfPoints(meanModel->GetNumberOfPoints());
+  for (vtkIdType i=0; i<meanModel->GetNumberOfPoints(); i++){
+    double pt[3];
+    meanModel->GetPoint(i,pt);
+    pt[0] = -pt[0];
+    pt[1] = -pt[1];
+    pt[2] = pt[2];
+    point->SetPoint(i,pt);
+  }
+  meanModel->SetPoints(point);
+  
+  //Add to the scene
+  vtkNew<vtkMRMLModelDisplayNode> modelDisplayNode;
+  this->mrmlScene()->AddNode(modelDisplayNode.GetPointer());
+
+  vtkNew<vtkMRMLModelNode> meanNode;
+  meanNode->SetAndObservePolyData(meanModel);
+  meanNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());
+  meanNode->SetName("meanModel");
+  this->mrmlScene()->AddNode(meanNode.GetPointer());
+  
+  meanModel->Delete();
 }
 
-/*void qSlicerLandmarkSegmentationModuleWidget::setCTscan(){
-  Q_D(qSlicerLandmarkSegmentationModuleWidget);
-  QString inputFile = QFileDialog::getOpenFileName(this, "Select CT scan", QString());
-  d->targetName->setText(inputFile);
-}*/
-
-
+//-----------------------------------------------------------------------------
 void qSlicerLandmarkSegmentationModuleWidget::apply(){
   Q_D(qSlicerLandmarkSegmentationModuleWidget);
   
@@ -694,8 +713,8 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   registration->SetInitialTransformParameters(transform->GetParameters());
   registration->SetInterpolator(interpolator);
   registration->SetMetric(metric);
-  registration->SetOptimizer(   optimizer);
-  registration->SetTransform(   transform );
+  registration->SetOptimizer( optimizer);
+  registration->SetTransform( transform );
 
 
   // the input to the registration will be the reference of the statistical model and the
@@ -745,7 +764,17 @@ void qSlicerLandmarkSegmentationModuleWidget::apply(){
   this->mrmlScene()->AddNode(meanNode.GetPointer());
   
   outputPolyData->Delete();*/
-      
+  
+  //Get last model display
+  vtkSmartPointer<vtkCollection> modelNodes = vtkSmartPointer<vtkCollection>::Take( this->mrmlScene()->GetNodesByClass("vtkMRMLModelNode") );
+  vtkMRMLModelNode* modelNodeFinal = vtkMRMLModelNode::SafeDownCast( modelNodes->GetItemAsObject (modelNodes->GetNumberOfItems()-1) );
+  
+  //Add to the scene
+  vtkNew<vtkMRMLModelDisplayNode> modelDisplayNode;
+  this->mrmlScene()->AddNode(modelDisplayNode.GetPointer());
+  modelNode->SetAndObservePolyData(modelNodeFinal->GetPolyData());
+  modelNode->SetAndObserveDisplayNodeID(modelDisplayNode->GetID());    
+  
 }
 
 //-----------------------------------------------------------------------------

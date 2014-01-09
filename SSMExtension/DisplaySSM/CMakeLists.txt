@@ -4,7 +4,7 @@
 find_package(Statismo REQUIRED)
 
 link_directories(${STATISMO_LIBRARY_DIR})
-message(${STATISMO_LIBRARY_DIR})
+message(${STATISMO_INCLUDE_DIRS})
 
 #-----------------------------------------------------------------------------
 set(MODULE_NAME DisplaySSM)
@@ -51,7 +51,8 @@ set(MODULE_TARGET_LIBRARIES
   #qSlicer${MODULE_NAME}ModuleWidgets
   ${ITK_LIBRARIES}
   ${STATISMO_LIBRARIES}
-  ${VTK_LIBRARIES} ${VTK_HDF5_LIBRARIES}
+  ${VTK_LIBRARIES} 
+  ${VTK_HDF5_LIBRARIES}
   vtkSlicerModelsModuleLogic
   )
 

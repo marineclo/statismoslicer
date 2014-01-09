@@ -28,6 +28,10 @@ if(${EXTENSION_NAME}_SUPERBUILD)
 endif()
 
 #-----------------------------------------------------------------------------
+#set(Slicer_EXTENSION_EXTERNAL_PROJECT_LIBRARY_DIRS ${CMAKE_BINARY_DIR}/${proj}-install/lib/hdf5)
+set(Slicer_EXTENSION_EXTERNAL_PROJECT_LIBRARY_DIRS /Users/Marine/EPFL/Software/Slicer/statismoslicer/SSMExtension-build/Statismo-install/lib/hdf5/)
+
+#-----------------------------------------------------------------------------
 #add_subdirectory(ComparePolyData)
 add_subdirectory(DisplaySSM)
 add_subdirectory(LandmarkSegmentation)

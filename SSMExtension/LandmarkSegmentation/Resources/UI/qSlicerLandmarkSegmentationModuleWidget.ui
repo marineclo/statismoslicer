@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>527</width>
-    <height>474</height>
+    <height>522</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,6 +23,13 @@
       <property name="margin">
        <number>0</number>
       </property>
+      <item row="10" column="1" colspan="3">
+       <widget class="QPushButton" name="applyButton">
+        <property name="text">
+         <string>Apply</string>
+        </property>
+       </widget>
+      </item>
       <item row="8" column="1">
        <widget class="QLineEdit" name="threshold"/>
       </item>
@@ -61,13 +68,6 @@
         </property>
        </widget>
       </item>
-      <item row="10" column="0">
-       <widget class="QLabel" name="outputName">
-        <property name="text">
-         <string>Output Name</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="0">
        <widget class="QLabel" name="outputSegLabel">
         <property name="text">
@@ -88,16 +88,6 @@
          <string>Variance</string>
         </property>
        </widget>
-      </item>
-      <item row="11" column="1" colspan="3">
-       <widget class="QPushButton" name="applyButton">
-        <property name="text">
-         <string>Apply</string>
-        </property>
-       </widget>
-      </item>
-      <item row="10" column="1" colspan="3">
-       <widget class="QLineEdit" name="outputMeshName"/>
       </item>
       <item row="8" column="3">
        <widget class="QLineEdit" name="lmVariance"/>
@@ -149,8 +139,14 @@
    </item>
    <item>
     <widget class="ctkCollapsibleButton" name="CollapsibleButton">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="text">
       <string>Compare PolyData</string>
+     </property>
+     <property name="collapsed">
+      <bool>true</bool>
      </property>
      <layout class="QGridLayout" name="gridLayout2">
       <property name="margin">
