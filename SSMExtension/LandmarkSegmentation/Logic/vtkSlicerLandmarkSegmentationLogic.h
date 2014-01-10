@@ -27,11 +27,6 @@
 // Slicer includes
 #include "vtkSlicerModuleLogic.h"
 
-// MRML includes
-
-// STD includes
-#include <cstdlib>
-
 #include "vtkSlicerLandmarkSegmentationModuleLogicExport.h"
 
 

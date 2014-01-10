@@ -64,7 +64,7 @@ qSlicerDisplaySSMModule::~qSlicerDisplaySSMModule()
 //-----------------------------------------------------------------------------
 QString qSlicerDisplaySSMModule::helpText()const
 {
-  return "This is a loadable module bundled in an extension to display a SSM";
+  return "Module for displaying a Statistical Shape Model (SSM) created with Statismo<br>";
 }
 
 //-----------------------------------------------------------------------------
@@ -78,7 +78,7 @@ QString qSlicerDisplaySSMModule::acknowledgementText()const
 QStringList qSlicerDisplaySSMModule::contributors()const
 {
   QStringList moduleContributors;
-  moduleContributors << QString("Marine Clogenson (EPFL)");
+  moduleContributors << QString("Marine Clogenson (EPFL), Jean-Christophe Fillion-Robin (Kitware)");
   return moduleContributors;
 }
 

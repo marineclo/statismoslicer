@@ -17,18 +17,21 @@
 
 // DisplaySSM Logic includes
 #include "vtkSlicerDisplaySSMLogic.h"
+#include <vtkSlicerModelsLogic.h>
 
 // MRML includes
+#include <vtkMRMLModelNode.h>
+#include <vtkMRMLModelDisplayNode.h>
+#include <vtkMRMLScene.h>
 
 // VTK includes
+#include <vtkIntArray.h>
 #include <vtkNew.h>
-#include "vtkMRMLModelNode.h"
-#include "vtkMRMLModelDisplayNode.h"
+#include <vtkObjectFactory.h>
+#include <vtkPolyData.h>
 
 // STD includes
 #include <cassert>
-
-#include "vtkSlicerModelsLogic.h"
 
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkSlicerDisplaySSMLogic);

@@ -28,7 +28,7 @@
 #include "itkMesh.h"
 #include "statismo_ITK/itkStatisticalModel.h"
 
-//Add to convert itkMesh to vtkPolyData
+// Add to convert itkMesh to vtkPolyData
 #include "vtkPolyData.h"
 #include "vtkPolyDataWriter.h"
 #include "vtkPoints.h"
@@ -39,7 +39,7 @@
 #include "itkObject.h"
 #include <vtkSmartPointer.h>
 
-//Add to convert vtkPolyData to vtkImageData
+// Add to convert vtkPolyData to vtkImageData
 #include <vtkImageData.h>
 #include <vtkPolyDataToImageStencil.h>
 #include <vtkImageStencil.h>

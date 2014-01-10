@@ -13,11 +13,15 @@ set(EXTENSION_DESCRIPTION "This is an extension bundling a loadable module built
 set(EXTENSION_DEPENDS "NA") # Specified as a space separated list or 'NA' if any
 set(EXTENSION_BUILD_SUBDIRECTORY inner-build)
 
+set(SUPERBUILD_TOPLEVEL_PROJECT inner)
+
 #-----------------------------------------------------------------------------
 find_package(Slicer REQUIRED)
 include(${Slicer_USE_FILE})
+mark_as_superbuild(Slicer_DIR)
 
 find_package(Git REQUIRED)
+mark_as_superbuild(GIT_EXECUTABLE)
 
 #-----------------------------------------------------------------------------
 option(${EXTENSION_NAME}_SUPERBUILD "Build ${EXTENSION_NAME} and the projects it depends on via SuperBuild.cmake." ON)
@@ -28,15 +32,15 @@ if(${EXTENSION_NAME}_SUPERBUILD)
 endif()
 
 #-----------------------------------------------------------------------------
-#set(Slicer_EXTENSION_EXTERNAL_PROJECT_LIBRARY_DIRS ${CMAKE_BINARY_DIR}/${proj}-install/lib/hdf5)
-set(Slicer_EXTENSION_EXTERNAL_PROJECT_LIBRARY_DIRS /Users/Marine/EPFL/Software/Slicer/statismoslicer/SSMExtension-build/Statismo-install/lib/hdf5/)
+set(Slicer_EXTENSION_EXTERNAL_PROJECT_LIBRARY_DIRS ${HDF5_DIR}/lib)
 
 #-----------------------------------------------------------------------------
-#add_subdirectory(ComparePolyData)
 add_subdirectory(DisplaySSM)
-add_subdirectory(LandmarkSegmentation)
+#add_subdirectory(LandmarkSegmentation)
 
 #-----------------------------------------------------------------------------
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};${EXTENSION_NAME};ALL;/")
-#set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${Foo_DIR};Foo;RuntimeLibraries;/")
-INCLUDE(${Slicer_EXTENSION_CPACK})
+if(NOT APPLE)
+  install(FILES ${HDF5_LIBRARIES} DESTINATION ${Slicer_INSTALL_ROOT}${Slicer_BUNDLE_EXTENSIONS_LOCATION}${Slicer_LIB_DIR} COMPONENT RuntimeLibraries)
+endif()
+include(${Slicer_EXTENSION_CPACK})

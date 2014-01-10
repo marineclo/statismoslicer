@@ -26,17 +26,12 @@
 
 // Slicer includes
 #include "vtkSlicerModuleLogic.h"
-#include "vtkSlicerModelsLogic.h"
-
-// MRML includes
-
-// STD includes
-#include <cstdlib>
-
-#include "vtkSlicerDisplaySSMModuleLogicExport.h"
+class vtkSlicerModelsLogic;
 
 // VTK includes
-#include "vtkPolyData.h"
+class vtkPolyData;
+
+#include "vtkSlicerDisplaySSMModuleLogicExport.h"
 
 /// \ingroup Slicer_QtModules_ExtensionTemplate
 class VTK_SLICER_DISPLAYSSM_MODULE_LOGIC_EXPORT vtkSlicerDisplaySSMLogic :

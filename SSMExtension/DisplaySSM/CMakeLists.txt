@@ -2,9 +2,8 @@
 #-----------------------------------------------------------------------------
 # Third party libraries
 find_package(Statismo REQUIRED)
-
 link_directories(${STATISMO_LIBRARY_DIR})
-message(${STATISMO_INCLUDE_DIRS})
+#message(STATUS "STATISMO_INCLUDE_DIRS:${STATISMO_INCLUDE_DIRS}")
 
 #-----------------------------------------------------------------------------
 set(MODULE_NAME DisplaySSM)
@@ -26,6 +25,7 @@ set(MODULE_INCLUDE_DIRECTORIES
   #${CMAKE_CURRENT_SOURCE_DIR}/Widgets
   #${CMAKE_CURRENT_BINARY_DIR}/Widgets
   ${STATISMO_INCLUDE_DIRS}
+  ${HDF5_INCLUDE_DIRS}
   ${vtkSlicerModelsModuleLogic_SOURCE_DIR}
   ${vtkSlicerModelsModuleLogic_BINARY_DIR}
   )
@@ -51,8 +51,8 @@ set(MODULE_TARGET_LIBRARIES
   #qSlicer${MODULE_NAME}ModuleWidgets
   ${ITK_LIBRARIES}
   ${STATISMO_LIBRARIES}
-  ${VTK_LIBRARIES} 
-  ${VTK_HDF5_LIBRARIES}
+  ${VTK_LIBRARIES}
+  ${HDF5_LIBRARIES}
   vtkSlicerModelsModuleLogic
   )
 
