@@ -295,6 +295,8 @@ void qSlicerDisplaySSMModuleWidget::applyModel()
       vtkModel = VtkStatisticalModelType::Load(modelString.c_str());
       meanModel = vtkModel->DrawMean();
       nbPrincipalComponent = vtkModel->GetNumberOfPrincipalComponents();
+      nameITK.push_back("Mean");
+      indexNode=0;
     }
     catch (StatisticalModelException& e) {
       std::cout << "Exception occured while building the shape model" << std::endl;
@@ -362,39 +364,29 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
   vtkSmartPointer<vtkCollection> modelDisplayNodes = vtkSmartPointer<vtkCollection>::Take( this->mrmlScene()->GetNodesByClass("vtkMRMLModelDisplayNode") );
   vtkSmartPointer<vtkCollection> volumeNodes = vtkSmartPointer<vtkCollection>::Take( this->mrmlScene()->GetNodesByClass("vtkMRMLScalarVolumeNode") );
   
-  if (d->radioButtonVTK->isChecked()){
-    int nbPrincipalComponent = vtkModel->GetNumberOfPrincipalComponents();
-    VectorType coefficients = VectorType::Zero(nbPrincipalComponent);
-    coefficients(pc) = std;
-    samplePC = vtkModel->DrawSample(coefficients);
-    /*double prob = vtkModel->ComputeProbabilityOfDataset(samplePC);
-    std::cout<<"prob = "<<prob<<std::endl;*/
-  }
-  if (d->radioButtonITK->isChecked()){
+  typedef std::vector<std::string>::iterator ItemIterator;
+  ItemIterator iter = std::find(nameITK.begin(), nameITK.end(), sampleName); //check if the name already exists
+  size_t index = std::distance(nameITK.begin(), iter);
 
-    typedef std::vector<std::string>::iterator ItemIterator;
-    ItemIterator iter = std::find(nameITK.begin(), nameITK.end(), sampleName); //check if the name already exists
-    size_t index = std::distance(nameITK.begin(), iter);
+  //Set visibility off of the previous model
+  vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (3+indexNode) );
+  modelViewNode->VisibilityOff();
 
-    //Set visibility off of the previous model
-    vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (3+indexNode) );
-    modelViewNode->VisibilityOff();
+  if(iter!=nameITK.end()){ //model already exists
+    //Set Visibility on of the current model
+    vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (3+index) );
+    modelViewNode->VisibilityOn();
+    //Display the volume in the slice node
+    vtkMRMLScalarVolumeNode* volumeNode = vtkMRMLScalarVolumeNode::SafeDownCast( volumeNodes->GetItemAsObject (index) );
+  	vtkSlicerApplicationLogic * appLogic = qSlicerCoreApplication::application()->applicationLogic();
+  	vtkMRMLSelectionNode * selectionNode = appLogic->GetSelectionNode();
+  	selectionNode->SetReferenceActiveVolumeID(volumeNode->GetID());
+  	appLogic->PropagateVolumeSelection();
+  	appLogic->FitSliceToAll();
 
-    if(iter!=nameITK.end()){ //model already exists
-      //Set Visibility on of the current model
-      vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (3+index) );
-      modelViewNode->VisibilityOn();
-      //Display the volume in the slice node
-      vtkMRMLScalarVolumeNode* volumeNode = vtkMRMLScalarVolumeNode::SafeDownCast( volumeNodes->GetItemAsObject (index) );
-  	  vtkSlicerApplicationLogic * appLogic = qSlicerCoreApplication::application()->applicationLogic();
-  	  vtkMRMLSelectionNode * selectionNode = appLogic->GetSelectionNode();
-  	  selectionNode->SetReferenceActiveVolumeID(volumeNode->GetID());
-  	  appLogic->PropagateVolumeSelection();
-  	  appLogic->FitSliceToAll();
-
-    }else{
-      nameITK.push_back(sampleName);
-
+  }else{
+    nameITK.push_back(sampleName);
+    if (d->radioButtonITK->isChecked()){
       int nbPrincipalComponent = itkModel->GetNumberOfPrincipalComponents();
       itkVectorType coefficients(nbPrincipalComponent,0.0); // initialize the vector to 0
       coefficients(pc) = std;
@@ -408,8 +400,17 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
       samplePC=d->convertMeshToVtk(itkSamplePC, samplePC);
       displayModelVolume(samplePC, sampleName);
     }
-    indexNode = index;
+    if (d->radioButtonVTK->isChecked()){
+      int nbPrincipalComponent = vtkModel->GetNumberOfPrincipalComponents();
+      VectorType coefficients = VectorType::Zero(nbPrincipalComponent);
+      coefficients(pc) = std;
+      samplePC = vtkModel->DrawSample(coefficients);
+      displayModelVolume(samplePC, sampleName);
+      /*double prob = vtkModel->ComputeProbabilityOfDataset(samplePC);
+      std::cout<<"prob = "<<prob<<std::endl;*/
+    }
   }
+  indexNode = index;
   samplePC->Delete();
 
 }

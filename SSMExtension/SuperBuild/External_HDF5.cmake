@@ -93,7 +93,7 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
     # Resolve the absolute path of libhdf5.7.4.0.dylib in cd 3rdParty/HDF5/lib/   otool -L libhdf5_cpp.1.8.10.dylib
     # libhdf5_cpp.1.8.10.dylib link to libhdf5.1.8.10.dylib
     ExternalProject_Add_Step(${proj} link_hdf5.7.4.0_to_hdf5_cpp.1.8.10
-      COMMAND install_name_tool -change hdf5.7.4.0.dylib ${HDF5_LIBRARY} ${HDF5_CPP_LIBRARY}
+      COMMAND install_name_tool -change libhdf5.7.4.0.dylib ${HDF5_LIBRARY} ${HDF5_CPP_LIBRARY}
       DEPENDEES install
       )
   endif()
