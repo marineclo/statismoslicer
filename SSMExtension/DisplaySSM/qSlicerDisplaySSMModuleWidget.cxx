@@ -377,12 +377,16 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
     vtkMRMLModelDisplayNode* modelViewNode = vtkMRMLModelDisplayNode::SafeDownCast( modelDisplayNodes->GetItemAsObject (3+index) );
     modelViewNode->VisibilityOn();
     //Display the volume in the slice node
-    vtkMRMLScalarVolumeNode* volumeNode = vtkMRMLScalarVolumeNode::SafeDownCast( volumeNodes->GetItemAsObject (index) );
-  	vtkSlicerApplicationLogic * appLogic = qSlicerCoreApplication::application()->applicationLogic();
-  	vtkMRMLSelectionNode * selectionNode = appLogic->GetSelectionNode();
-  	selectionNode->SetReferenceActiveVolumeID(volumeNode->GetID());
-  	appLogic->PropagateVolumeSelection();
-  	appLogic->FitSliceToAll();
+    if (d->displaySliceView->isChecked())
+    {
+      vtkMRMLScalarVolumeNode* volumeNode = vtkMRMLScalarVolumeNode::SafeDownCast( volumeNodes->GetItemAsObject (index) );
+      vtkSlicerApplicationLogic * appLogic = qSlicerCoreApplication::application()->applicationLogic();
+      vtkMRMLSelectionNode * selectionNode = appLogic->GetSelectionNode();
+      selectionNode->SetReferenceActiveVolumeID(volumeNode->GetID());
+      appLogic->PropagateVolumeSelection();
+      appLogic->FitSliceToAll();
+    }
+    
 
   }else{
     nameITK.push_back(sampleName);
