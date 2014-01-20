@@ -504,53 +504,56 @@ void qSlicerDisplaySSMModuleWidget::displayModelVolume(vtkPolyData* modelToDispl
   meanNode->SetName(modelName.c_str());
   this->mrmlScene()->AddNode(meanNode.GetPointer());
   
-  double spacing[3]; // desired volume spacing
-  spacing[0] = 0.24;
-  spacing[1] = 0.24;
-  spacing[2] = 0.6;
+  if (d->displaySliceView->isChecked()){
+    double spacing[3]; // desired volume spacing
+    spacing[0] = 0.24;
+    spacing[1] = 0.24;
+    spacing[2] = 0.6;
 
-  double bounds[6];
-  vtkSmartPointer<vtkImageData> meanImage;
-  meanImage.TakeReference(d->convertPolyDataToImageData(modelToDisplay, spacing, &bounds[0]));
+    double bounds[6];
+    vtkSmartPointer<vtkImageData> meanImage;
+    meanImage.TakeReference(d->convertPolyDataToImageData(modelToDisplay, spacing, &bounds[0]));
 
-  //Create a displayable node and add to the scene
-  vtkNew<vtkMRMLLabelMapVolumeDisplayNode> volumeDisplayNode;
-  volumeDisplayNode->SetAndObserveColorNodeID("vtkMRMLColorTableNodeFileGenericAnatomyColors.txt");
-  this->mrmlScene()->AddNode( volumeDisplayNode.GetPointer() );
+    //Create a displayable node and add to the scene
+    vtkNew<vtkMRMLLabelMapVolumeDisplayNode> volumeDisplayNode;
+    volumeDisplayNode->SetAndObserveColorNodeID("vtkMRMLColorTableNodeFileGenericAnatomyColors.txt");
+    this->mrmlScene()->AddNode( volumeDisplayNode.GetPointer() );
+    
+    vtkNew<vtkImageChangeInformation> ici;
+    ici->SetInput(meanImage);
+    ici->SetOutputSpacing( 1, 1, 1 );
+    ici->SetOutputOrigin( 0, 0, 0 );
+    ici->Update();
+
+    vtkNew<vtkMatrix4x4> matrix;
+    matrix->Identity();
+    matrix->SetElement(0,0,-1);
+    matrix->SetElement(1,1,-1);
+    
+   //volume name with PC and Std values
+    std::ostringstream ssVolume;
+    ssVolume <<"volumePc"<<d->pcSlider->value()-1<<"Std"<<d->stdSlider->value();
+    std::string volumeName = ssVolume.str();
+    
+    //Create a scalar volume node with the created volume
+    vtkNew<vtkMRMLScalarVolumeNode> volumeNode;
+    volumeNode->SetIJKToRASMatrix(matrix.GetPointer());
+    volumeNode->SetAndObserveDisplayNodeID(volumeDisplayNode->GetID());
+    volumeNode->SetAndObserveImageData(ici->GetOutput());
+    volumeNode->SetOrigin(-bounds[0], -bounds[2], bounds[4]); //Compensate Slicer coordinates
+    volumeNode->SetSpacing(spacing);
+    volumeNode->SetLabelMap(true);
+    volumeNode->SetName(volumeName.c_str());
+    this->mrmlScene()->AddNode(volumeNode.GetPointer());
+
+    // finally display the volume in the slice node
+    vtkSlicerApplicationLogic * appLogic = qSlicerCoreApplication::application()->applicationLogic();
+    vtkMRMLSelectionNode * selectionNode = appLogic->GetSelectionNode();
+    //selectionNode->SetReferenceActiveLabelVolumeID(volumeNode->GetID());
+    selectionNode->SetReferenceActiveVolumeID(volumeNode->GetID());
+    appLogic->PropagateVolumeSelection();
+    appLogic->FitSliceToAll();
+  }
   
-  vtkNew<vtkImageChangeInformation> ici;
-  ici->SetInput(meanImage);
-  ici->SetOutputSpacing( 1, 1, 1 );
-  ici->SetOutputOrigin( 0, 0, 0 );
-  ici->Update();
-
-  vtkNew<vtkMatrix4x4> matrix;
-  matrix->Identity();
-  matrix->SetElement(0,0,-1);
-  matrix->SetElement(1,1,-1);
-  
- //volume name with PC and Std values
-  std::ostringstream ssVolume;
-  ssVolume <<"volumePc"<<d->pcSlider->value()-1<<"Std"<<d->stdSlider->value();
-  std::string volumeName = ssVolume.str();
-  
-  //Create a scalar volume node with the created volume
-  vtkNew<vtkMRMLScalarVolumeNode> volumeNode;
-  volumeNode->SetIJKToRASMatrix(matrix.GetPointer());
-  volumeNode->SetAndObserveDisplayNodeID(volumeDisplayNode->GetID());
-  volumeNode->SetAndObserveImageData(ici->GetOutput());
-  volumeNode->SetOrigin(-bounds[0], -bounds[2], bounds[4]); //Compensate Slicer coordinates
-  volumeNode->SetSpacing(spacing);
-  volumeNode->SetLabelMap(true);
-  volumeNode->SetName(volumeName.c_str());
-  this->mrmlScene()->AddNode(volumeNode.GetPointer());
-
-  // finally display the volume in the slice node
-  vtkSlicerApplicationLogic * appLogic = qSlicerCoreApplication::application()->applicationLogic();
-  vtkMRMLSelectionNode * selectionNode = appLogic->GetSelectionNode();
-  //selectionNode->SetReferenceActiveLabelVolumeID(volumeNode->GetID());
-  selectionNode->SetReferenceActiveVolumeID(volumeNode->GetID());
-  appLogic->PropagateVolumeSelection();
-  appLogic->FitSliceToAll();
 }
 

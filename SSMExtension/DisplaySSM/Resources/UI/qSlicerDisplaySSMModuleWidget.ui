@@ -117,6 +117,13 @@
         </property>
        </widget>
       </item>
+      <item row="8" column="0">
+       <widget class="QRadioButton" name="displaySliceView">
+        <property name="text">
+         <string>View Slice</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -163,8 +170,8 @@
    <slot>onSelect()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>540</x>
-     <y>225</y>
+     <x>531</x>
+     <y>252</y>
     </hint>
     <hint type="destinationlabel">
      <x>122</x>
@@ -179,8 +186,8 @@
    <slot>onSelectInputModel()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>540</x>
-     <y>124</y>
+     <x>537</x>
+     <y>149</y>
     </hint>
     <hint type="destinationlabel">
      <x>155</x>
@@ -195,8 +202,8 @@
    <slot>onSelect()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>540</x>
-     <y>260</y>
+     <x>531</x>
+     <y>287</y>
     </hint>
     <hint type="destinationlabel">
      <x>367</x>

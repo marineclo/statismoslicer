@@ -36,7 +36,7 @@ set(Slicer_EXTENSION_EXTERNAL_PROJECT_LIBRARY_DIRS ${HDF5_DIR}/lib)
 
 #-----------------------------------------------------------------------------
 add_subdirectory(DisplaySSM)
-#add_subdirectory(LandmarkSegmentation)
+add_subdirectory(LandmarkSegmentation)
 
 #-----------------------------------------------------------------------------
 set(CPACK_INSTALL_CMAKE_PROJECTS "${CPACK_INSTALL_CMAKE_PROJECTS};${CMAKE_BINARY_DIR};${EXTENSION_NAME};ALL;/")
