@@ -353,7 +353,7 @@ void qSlicerDisplaySSMModuleWidget::onSelect()
   vtkPolyData* samplePC = vtkPolyData::New();
 
   int pc = d->pcSlider->value()-1; // -1 because user can choose between 1 and max
-  int std = d->stdSlider->value();
+  double std = d->stdSlider->value();
 
   //display Sample name with PC and Std values
   std::ostringstream ssSample;
@@ -560,4 +560,3 @@ void qSlicerDisplaySSMModuleWidget::displayModelVolume(vtkPolyData* modelToDispl
   }
   
 }
-
