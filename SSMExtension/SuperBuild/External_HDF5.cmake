@@ -32,6 +32,12 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
 	  set(HDF5_LIBRARIES debug hdf5 debug hdf5_cpp optimized hdf5; optimized hdf5_cpp)
 	  set(HDF5_BUILD_TYPE "RELEASE")
   endif(WIN32)
+
+  if(APPLE)
+    set( HDF5_VERSION "1.8.10" )
+  else(APPLE)
+      set( HDF5_VERSION "1.8.10" )
+  endif(APPLE)
   
   set(${proj}_DIR ${CMAKE_CURRENT_BINARY_DIR}/3rdParty/HDF5)
   
@@ -44,7 +50,7 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
 
   ExternalProject_Add(${proj}
     ${${proj}_EP_ARGS}
-    URL "ftp://www.hdfgroup.org/HDF5/releases/hdf5-1.8.10/src/hdf5-1.8.10.tar.gz"
+    URL "ftp://www.hdfgroup.org/HDF5/releases/hdf5-${HDF5_VERSION}/src/hdf5-${HDF5_VERSION}.tar.gz"
     #URL_MD5
     SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
     BINARY_DIR ${proj}-build
