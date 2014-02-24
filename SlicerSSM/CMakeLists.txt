@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 2.8.9)
 
 #-----------------------------------------------------------------------------
-set(EXTENSION_NAME SlicerSSM)
+project(SlicerSSM)
+
+#set(EXTENSION_NAME SlicerSSM)
 
 #-----------------------------------------------------------------------------
 set(EXTENSION_HOMEPAGE "http://www.slicer.org/slicerWiki/index.php/Documentation/4.3/Extensions/SlicerSSM")
