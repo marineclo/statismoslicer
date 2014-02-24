@@ -41,8 +41,9 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
   
   set(${proj}_DIR ${CMAKE_CURRENT_BINARY_DIR}/3rdParty/HDF5)
   
-  # Find out linux distribution and version
-   EXECUTE_PROCESS(
+  if(UNIX)
+      # Find out linux distribution and version
+    EXECUTE_PROCESS(
       COMMAND cat /etc/lsb-release
       COMMAND grep DISTRIB_ID
       COMMAND awk -F= "{ print $2 }"
@@ -50,8 +51,8 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
       COMMAND sed "s/ //"
       OUTPUT_VARIABLE LSB_ID
       RESULT_VARIABLE LSB_ID_RESULT
-   )
-   EXECUTE_PROCESS(
+    )
+    EXECUTE_PROCESS(
       COMMAND cat /etc/lsb-release
       COMMAND grep DISTRIB_RELEASE
       COMMAND awk -F= "{ print $2 }"
@@ -59,20 +60,16 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
       COMMAND sed "s/ //"
       OUTPUT_VARIABLE LSB_VER
       RESULT_VARIABLE LSB_VER_RESULT
-   )
+    )
 
-  #ExternalProject_Message(${proj} "LSB_ID:${LSB_ID}")
-  #ExternalProject_Message(${proj} "LSB_VER:${LSB_VER}")
-   #message("LSB output: ${LSB_ID_RESULT}:${LSB_ID} ${LSB_VER_RESULT}:${LSB_VER}")
-  if(${LSB_ID} STREQUAL "Ubuntu")
-    if(${LSB_VER} STREQUAL "12.04")
-      set( HDF5_VERSION "1.8.7" )
-      ExternalProject_Message(${proj} "LSB_VERe:${LSB_VER}")
+    #message("LSB output: ${LSB_ID_RESULT}:${LSB_ID} ${LSB_VER_RESULT}:${LSB_VER}")
+    if(${LSB_ID} STREQUAL "Ubuntu")
+      if(${LSB_VER} STREQUAL "12.04")
+        set( HDF5_VERSION "1.8.7" )
+        ExternalProject_Message(${proj} "LSB_VERe:${LSB_VER}")
+      endif()
     endif()
-  endif()
-
-
-  if(UNIX)
+    
     # Fix build error for the form 'H5detect.c:146:1: error: unknown type name ‘sigjmp_buf'
     # known to happen on 'gcc (Ubuntu/Linaro 4.8.1-10ubuntu9) 4.8.1'
     # Suggested fix from http://lists.boost.org/boost-build/2004/01/5512.php
