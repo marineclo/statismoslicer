@@ -2,8 +2,8 @@
 set(proj Statismo)
 
 # Set dependency list
-#set(${proj}_DEPENDS HDF5) #Ubuntu 13...
-set(${proj}_DEPENDS "")
+set(${proj}_DEPENDS HDF5) #Ubuntu 13...
+#set(${proj}_DEPENDS "")
 
 # Include dependent projects if any
 ExternalProject_Include_Dependencies(${proj} PROJECT_VAR proj)
@@ -38,7 +38,7 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
       -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_BINARY_DIR}/${proj}-install
       #-DBUILD_TESTING:BOOL=OFF
       # HDF5
-      -DHDF5_USE_EXTERNAL:BOOL=OFF # ON if ubuntu 13....
+      #-DHDF5_USE_EXTERNAL:BOOL=ON # ON if ubuntu 13, mac....
       -DHDF5_INCLUDE_DIR:PATH=${HDF5_INCLUDE_DIR}
       -DHDF5_INCLUDE_DIR_CPP:PATH=${HDF5_CPP_LIBRARY}
       -DHDF5_LIBRARY:FILEPATH=${HDF5_LIBRARY}

@@ -6,7 +6,7 @@ set(EXTENSION_NAME SSMExtension)
 #-----------------------------------------------------------------------------
 set(EXTENSION_HOMEPAGE "http://www.slicer.org/slicerWiki/index.php/Documentation/4.3/Extensions/SSMExtension")
 set(EXTENSION_CATEGORY "Examples")
-set(EXTENSION_CONTRIBUTORS "Marine Clogenson (EPFL)")
+set(EXTENSION_CONTRIBUTORS "Marine Clogenson (EPFL), Jean-Christophe Fillon-Robin (Kitware)")
 set(EXTENSION_DESCRIPTION "This is an extension bundling a loadable module built using SuperBuild to to build a dependent project named Statismo")
 #set(EXTENSION_ICONURL "http://viewvc.slicer.org/viewvc.cgi/Slicer4/trunk/Extensions/Testing/SuperBuildLoadableExtensionTemplate/Resources/Icons/SuperBuildLoadableExtensionTemplate.png?revision=19437&view=co")
 #set(EXTENSION_SCREENSHOTURLS "http://wiki.slicer.org/slicerWiki/images/b/b3/Slicer-r19441-SuperBuildLoadableExtensionTemplate-screenshot.png")
@@ -35,7 +35,7 @@ endif()
 set(Slicer_EXTENSION_EXTERNAL_PROJECT_LIBRARY_DIRS ${HDF5_DIR}/lib)
 
 #-----------------------------------------------------------------------------
-add_subdirectory(DisplaySSM)
+add_subdirectory(SSMViewer)
 add_subdirectory(LandmarkSegmentation)
 
 #-----------------------------------------------------------------------------
