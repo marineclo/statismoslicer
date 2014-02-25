@@ -111,8 +111,11 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
     set(HDF5_LIBRARY ${HDF5_LIBRARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}hdf5.so.${HDF5_VERSION})
     set(HDF5_CPP_LIBRARY ${HDF5_LIBRARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}hdf5_cpp.so.${HDF5_VERSION})
     if(APPLE)
+      set(SOVERSION 7.4.0)
       set(HDF5_LIBRARY ${HDF5_LIBRARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}hdf5.${HDF5_VERSION}.dylib)
       set(HDF5_CPP_LIBRARY ${HDF5_LIBRARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}hdf5_cpp.${HDF5_VERSION}.dylib)
+      set(HDF5_LIBRARY_SOVERSION ${HDF5_LIBRARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}hdf5.${SOVERSION}.dylib)
+      set(HDF5_CPP_LIBRARY_SOVERSION ${HDF5_LIBRARY_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}hdf5_cpp.${SOVERSION}.dylib)
     endif()
   endif()
   set(HDF5_LIBRARIES ${HDF5_LIBRARY} ${HDF5_CPP_LIBRARY})
@@ -124,6 +127,14 @@ if(NOT DEFINED ${proj}_DIR AND NOT ${CMAKE_PROJECT_NAME}_USE_SYSTEM_${proj})
       )
     ExternalProject_Add_Step(${proj} fix_rpath_hdf5_cpp
       COMMAND install_name_tool -id ${HDF5_CPP_LIBRARY} ${HDF5_CPP_LIBRARY}
+      DEPENDEES install
+      )
+    ExternalProject_Add_Step(${proj} fix_rpath_hdf5_soversion
+      COMMAND install_name_tool -id ${HDF5_LIBRARY_SOVERSION} ${HDF5_LIBRARY_SOVERSION}
+      DEPENDEES install
+      )
+    ExternalProject_Add_Step(${proj} fix_rpath_hdf5_cpp_soversion
+      COMMAND install_name_tool -id ${HDF5_CPP_LIBRARY_SOVERSION} ${HDF5_CPP_LIBRARY_SOVERSION}
       DEPENDEES install
       )
     # Resolve the absolute path of libhdf5.7.4.0.dylib in cd 3rdParty/HDF5/lib/   otool -L libhdf5_cpp.1.8.10.dylib
