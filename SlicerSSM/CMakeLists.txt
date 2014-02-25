@@ -13,7 +13,7 @@ set(EXTENSION_DESCRIPTION "The SlicerSSM extension allow working with Statistica
 set(EXTENSION_ICONURL "/Users/Marine/EPFL/Documents/Rapport/paper/screenshotSlicerView.png")
 #set(EXTENSION_ICONURL "http://viewvc.slicer.org/viewvc.cgi/Slicer4/trunk/Extensions/Testing/SuperBuildLoadableExtensionTemplate/Resources/Icons/SuperBuildLoadableExtensionTemplate.png?revision=19437&view=co")
 #set(EXTENSION_SCREENSHOTURLS "http://wiki.slicer.org/slicerWiki/images/b/b3/Slicer-r19441-SuperBuildLoadableExtensionTemplate-screenshot.png")
-set(EXTENSION_DEPENDS "NA") # Specified as a space separated list or 'NA' if any
+set(EXTENSION_DEPENDS "HDF5 Statismo") # Specified as a space separated list or 'NA' if any
 set(EXTENSION_BUILD_SUBDIRECTORY inner-build)
 
 set(SUPERBUILD_TOPLEVEL_PROJECT inner)
